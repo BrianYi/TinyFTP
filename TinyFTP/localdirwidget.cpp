@@ -313,7 +313,7 @@ void LocalDirWidget::newDir()
     QString dirName = tr("新建文件夹");
     QDir dir(currentDirPath());
     if (!dir.exists(dirName)) {
-        dir.mkdir(dirName);
+        goto succeed;
         return ;
     }
 
@@ -322,6 +322,8 @@ void LocalDirWidget::newDir()
         dirName = tr("新建文件夹(%1)").arg(i);
         i++;
     }
+succeed:
     dir.mkdir(dirName);
+    refresh();
     return ;
 }
