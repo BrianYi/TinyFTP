@@ -30,6 +30,7 @@ public:
         void exec();
         void del();
         void rename();
+        void newDir();
         void property();
 // private:
 // 	friend TabWidget *TinyFTP::remoteDirTabWidget;
@@ -53,6 +54,7 @@ private:
 	QAction *execAction;
 	QAction *delAction;
 	QAction *renameAction;
+    QAction *newDirAction;
 	QAction *propertyAction;
 	TinyFTP *parentTinyFtp;
 };

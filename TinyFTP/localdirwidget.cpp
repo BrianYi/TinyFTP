@@ -75,6 +75,7 @@ LocalDirWidget::LocalDirWidget(QWidget *parent)
 	execAction = new QAction(tr("执行"), this);
 	delAction = new QAction(tr("删除"), this);
 	renameAction = new QAction(tr("重命名"), this);
+    newDirAction = new QAction(tr("新建文件夹"), this);
 	propertyAction = new QAction(tr("属性"), this);
 	contextMenu->addAction(uploadAction);
 	contextMenu->addAction(queueAction);
@@ -85,6 +86,7 @@ LocalDirWidget::LocalDirWidget(QWidget *parent)
 	contextMenu->addAction(execAction);
 	contextMenu->addAction(delAction);
 	contextMenu->addAction(renameAction);
+    contextMenu->addAction(newDirAction);
 	contextMenu->addAction(propertyAction);
 
     //*******************************
@@ -105,6 +107,7 @@ LocalDirWidget::LocalDirWidget(QWidget *parent)
 	connect(execAction, SIGNAL(triggered()), this, SLOT(exec()));
 	connect(delAction, SIGNAL(triggered()), this, SLOT(del()));
 	connect(renameAction, SIGNAL(triggered()), this, SLOT(rename()));
+    connect(newDirAction, SIGNAL(triggered()), this, SLOT(newDir()));
 	connect(propertyAction, SIGNAL(triggered()), this, SLOT(property()));
 }
 
@@ -236,8 +239,8 @@ void LocalDirWidget::showContextMenu(const QModelIndex &index)
 			}
 			if (!static_cast<RemoteDirWidget*>(
 				remoteDirTabWidget->currentWidget())->isConnected()) {
-					foreach (QAction* action, actions)
-						action->setEnabled(false);
+                    uploadAction->setEnabled(false);
+                    sendToAction->setEnabled(false);
 			}
 		}
 
@@ -303,4 +306,22 @@ void LocalDirWidget::refresh()
 {
     localDirTreeModel->setRootPath(currentDirPath());
     localDirTreeView->resizeColumnToContents(0);
+}
+
+void LocalDirWidget::newDir()
+{
+    QString dirName = tr("新建文件夹");
+    QDir dir(currentDirPath());
+    if (!dir.exists(dirName)) {
+        dir.mkdir(dirName);
+        return ;
+    }
+
+    int i = 2;
+    while (dir.exists(dirName)) {
+        dirName = tr("新建文件夹(%1)").arg(i);
+        i++;
+    }
+    dir.mkdir(dirName);
+    return ;
 }
