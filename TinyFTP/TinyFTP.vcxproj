@@ -11,6 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="common.cpp" />
     <ClCompile Include="dirtreemodel.cpp" />
     <ClCompile Include="ftpclient.cpp" />
     <ClCompile Include="GeneratedFiles\Debug\moc_dirtreemodel.cpp">
@@ -69,6 +70,7 @@
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="common.h" />
     <ClInclude Include="ftpclient.h" />
     <ClInclude Include="logthread.h" />
     <CustomBuild Include="tinyftp.h">

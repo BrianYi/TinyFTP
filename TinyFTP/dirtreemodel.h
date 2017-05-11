@@ -23,7 +23,8 @@ struct Node
     qint64  fileSize;
     QString fileType;
     QString modifyDate;
-    QString path;
+    QString dirPath;
+	QString filePath;
     bool isDir;
     bool isSystemLink;
     bool isFile;

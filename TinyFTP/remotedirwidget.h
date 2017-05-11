@@ -3,8 +3,6 @@
 
 #include <QtGui>
 #include <QFtp>
-#include "dirtreemodel.h"
-#include "ftpclient.h"
 
 class TinyFTP;
 class RemoteDirWidget : public QWidget
@@ -31,8 +29,13 @@ public:
     void connectToHost(const QString &address, const QString &port, const QString &usrname = QString(), 
         const QString &pwd = QString());
 	bool isConnected() const;
-	void upload(const QString &path);
+	void upload(const QString &filePath);
+	QString currentDirPathUrl() const;
+	QString currentFilePathUrl() const;
 	QString currentDirPath() const;
+	QString currentFilePath() const;
+	/*static bool delDir(const QString &dirPath);*/
+	void reset();
 protected:
 	void closeEvent(QCloseEvent *event);
 	private slots:
@@ -40,6 +43,7 @@ protected:
         void ftpDone(bool error);
         void ftpCommandFinished(int,bool error);
         void ftpCommandStarted(int);
+		void ftpStateChanged(int state);
 		void setRootIndex(const QModelIndex &index);
 		void showContextMenu(const QModelIndex &index);
 		void download();
@@ -58,11 +62,9 @@ signals:
 private:
 	void writeLog(const QString &logData);
     void listDirectoryFiles(const QString &dir);
-	void download(const QString &path);
+	/*void download(const QString &path);*/
 	void processDirectory();
-    bool delDir(const QString &path);
-    QString encoded(const QString &str);
-    QString decoded(const QString &str);
+	QString url(const QString &str) const;
 	/*DirTreeModel *remoteDirTreeModel;*/
 	QTreeView *remoteDirTreeView;
 	QFileSystemModel *remoteDirFileSystemModel;
@@ -88,9 +90,16 @@ private:
     QString currentListDir;
     QString currentListLocalDir;
 
-	QString currentDownloadDir;
+	QString currentDownloadBaseDir;		// "\xxx" 开头
+	QString currentDownloadRelativeDir;	// "\xxx" 开头
+										// ftp 路径:currentDownloadBaseDir + currentDownloadRelativeDir
 	QString currentDownloadLocalDir;
-	QStringList pendingDownloadDirs;
+	QStringList pendingDownloadRelativeDirs;
+
+	QString currentUploadBaseDir;
+	QString currentUploadRelativeDir;
+	QString currentUploadLocalDir;
+	QStringList pendingUploadRelativeDirs;
 // 	QMenu *tabMenu;
 // 	QAction *newTabAction;
 // 	QAction *closeTabAction;
@@ -108,6 +117,7 @@ private:
 	TinyFTP *parentTinyFtp;
 	Command currentCommand;
 	QList<QFile *> openedDownloadingFiles;
+	QList<QFile *> openedUploadingFiles;
 };
 
 #endif // REMOTEDIRWIDGET_H

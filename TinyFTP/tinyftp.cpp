@@ -1,4 +1,8 @@
+#include "common.h"
 #include "tinyftp.h"
+#include "tabwidget.h"
+#include "localdirwidget.h"
+#include "remotedirwidget.h"
 
 TinyFTP::TinyFTP(QWidget *parent)
 	: QMainWindow(parent)
@@ -76,6 +80,16 @@ TinyFTP::TinyFTP(QWidget *parent)
 TinyFTP::~TinyFTP()
 {
 
+}
+
+RemoteDirWidget * TinyFTP::remoteCurrentWidget() const
+{
+	return static_cast<RemoteDirWidget *>(remoteDirTabWidget->currentWidget());
+}
+
+LocalDirWidget * TinyFTP::localCurrentWidget() const
+{
+	return static_cast<LocalDirWidget *>(localDirTabWidget->currentWidget());
 }
 
 void TinyFTP::writeSettings()

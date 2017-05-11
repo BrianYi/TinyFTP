@@ -1,5 +1,9 @@
-#include "localdirwidget.h"
+#include "common.h"
 #include "tinyftp.h"
+#include "localdirwidget.h"
+#include "remotedirwidget.h"
+#include "dirtreemodel.h"
+#include "tabwidget.h"
 
 LocalDirWidget::LocalDirWidget(QWidget *parent)
 	: QWidget(parent)
@@ -118,6 +122,16 @@ QString LocalDirWidget::currentDirPath() const
 	return localDirTreeModel->currentDirPath();
 }
 
+QString LocalDirWidget::currentFilePath() const
+{
+	Node *node = static_cast<Node*>(
+		localDirTreeView->currentIndex().internalPointer());
+	if (!node) {
+		return QString();
+	}
+	return node->filePath;
+}
+
 // void LocalDirWidget::contextMenuEvent(QContextMenuEvent *event)
 // {
 // 	QModelIndex index = localDirTreeView->indexAt(QCursor::pos());
@@ -147,13 +161,13 @@ void LocalDirWidget::setRootIndex(const QModelIndex &index)
 	}
 	Node *node = static_cast<Node*>(index.internalPointer());
 	if (node->isDir) {
-        QString path = node->path;
+        QString dir = node->filePath;
 		localDirTreeModel->setRootIndex(index);
 		localDirTreeView->resizeColumnToContents(0);
 		
         //*******************************
         // 这里的代码没有效果，不知为何
-        QModelIndex curIndex = localDirFileSystemModel->index(path);
+        QModelIndex curIndex = localDirFileSystemModel->index(dir);
         localDirComboTreeView->collapseAll();
         localDirComboTreeView->expand(curIndex);
         localDirComboTreeView->reset();
@@ -201,7 +215,7 @@ void LocalDirWidget::showContextMenu(const QModelIndex &index)
 			sendToAction->setEnabled(false);
 		}
 		Node *node = static_cast<Node*>(index.internalPointer());
-		QFileInfo fileInfo(node->path);
+		QFileInfo fileInfo(node->filePath);
 		if (fileInfo.isDir() && node->fileName == tr("..")) {
 			foreach (QAction* action, actions)
 				action->setEnabled(false);
@@ -222,7 +236,8 @@ void LocalDirWidget::showContextMenu(const QModelIndex &index)
 			}
 			if (!static_cast<RemoteDirWidget*>(
 				remoteDirTabWidget->currentWidget())->isConnected()) {
-					uploadAction->setEnabled(false);
+					foreach (QAction* action, actions)
+						action->setEnabled(false);
 			}
 		}
 
@@ -232,7 +247,8 @@ void LocalDirWidget::showContextMenu(const QModelIndex &index)
 
 void LocalDirWidget::upload()
 {
-
+	RemoteDirWidget *r = parentTinyFtp->remoteCurrentWidget();
+	r->upload(currentFilePath());
 }
 
 void LocalDirWidget::queue()
@@ -252,12 +268,19 @@ void LocalDirWidget::read()
 
 void LocalDirWidget::exec()
 {
-
+	
 }
 
 void LocalDirWidget::del()
 {
-
+	QString filePath = currentFilePath();
+	QFileInfo fileInfo(filePath);
+	if (fileInfo.isDir()) {
+		delDir(filePath);
+	} else {
+		QFile(filePath).remove();
+	}
+	refresh();
 }
 
 void LocalDirWidget::rename()

@@ -3,20 +3,22 @@
 
 #include <QWidget>
 #include <QtGui>
-#include "dirtreemodel.h"
-#include "localdirwidget.h"
-#include "remotedirwidget.h"
-#include "tabwidget.h"
+#include <QFtp>
 
+class RemoteDirWidget;
+class LocalDirWidget;
+class TabWidget;
 class TinyFTP : public QMainWindow
 {
 	Q_OBJECT
-
 public:
-	TabWidget *remoteDirTabWidget;
-	TabWidget *localDirTabWidget;
+	friend LocalDirWidget;
+	friend RemoteDirWidget;
+public:
 	TinyFTP(QWidget *parent = 0);
     ~TinyFTP();
+	RemoteDirWidget *remoteCurrentWidget() const;
+	LocalDirWidget *localCurrentWidget() const;
     public slots:
         void connectToFTPServer();
 		void ftpCommandDone(QFtp::Command command, bool error);
@@ -28,6 +30,8 @@ protected:
     private slots:
         void anonymous(int state);
 private:
+	TabWidget *remoteDirTabWidget;
+	TabWidget *localDirTabWidget;
 	QLabel *userNameLabel;
 	QLineEdit *userNameLineEdit;
 	QLabel *passwordLabel;
