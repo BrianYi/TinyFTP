@@ -36,6 +36,7 @@ public:
 	QString currentFilePathUrl() const;
 	QString currentDirPath() const;
 	QString currentFilePath() const;
+    QString cacheFilePath() const;
 	/*static bool delDir(const QString &dirPath);*/
 	void reconnect();
 	void reset();
@@ -108,6 +109,12 @@ private:
 	QString currentUploadRelativeDir;
 	QString currentUploadLocalDir;
 	QStringList pendingUploadRelativeDirs;
+
+    QString currentDelBaseDir;
+    QString currentDelRelativeDir;
+    //QString currentDelLocalDir;
+    QStack<QString> pendingDelRelativeDirs;
+    bool hasDir;
 // 	QMenu *tabMenu;
 // 	QAction *newTabAction;
 // 	QAction *closeTabAction;
