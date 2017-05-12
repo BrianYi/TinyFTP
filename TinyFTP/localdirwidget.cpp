@@ -298,8 +298,7 @@ void LocalDirWidget::property()
 
 void LocalDirWidget::reset()
 {
-    localDirTreeModel->setRootPath(currentDirPath());
-    localDirTreeView->resizeColumnToContents(0);
+    refresh();
 }
 
 void LocalDirWidget::refresh()

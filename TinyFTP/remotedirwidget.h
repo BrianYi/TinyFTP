@@ -11,7 +11,8 @@ class RemoteDirWidget : public QWidget
 
 public:
     enum Command { 
-        CMD_LIST,		// 显示文件
+        //CMD_LIST,		// 显示文件
+		CMD_NONE,
         CMD_DOWNLOAD,
         CMD_UPLOAD,
         CMD_QUEUE,
@@ -35,6 +36,7 @@ public:
 	QString currentDirPath() const;
 	QString currentFilePath() const;
 	/*static bool delDir(const QString &dirPath);*/
+	void reconnect();
 	void reset();
 protected:
 	void closeEvent(QCloseEvent *event);
@@ -48,11 +50,13 @@ protected:
 		void showContextMenu(const QModelIndex &index);
 		void download();
 		void queue();
+		void refresh();
 		void edit();
 		void read();
 		void changePermission();
 		void del();
 		void rename();
+		void newDir();
 		void property();
 signals:
     void updateLoginInfo(const QString &usrname, 
@@ -60,6 +64,8 @@ signals:
         const QString &address, bool isanonymous);
 	void ftpCommandDone(QFtp::Command command, bool error);
 private:
+	bool listing() const;
+	void setListing(bool isDoing);
 	void writeLog(const QString &logData);
     void listDirectoryFiles(const QString &dir);
 	/*void download(const QString &path);*/
@@ -107,17 +113,20 @@ private:
 	QMenu *contextMenu;
 	QAction *downloadAction;
 	QAction *queueAction;
+	QAction *refreshAction;
 	QAction *sendToAction;
 	QAction *editAction;
 	QAction *readAction;
 	QAction *changePermissionAction;
 	QAction *delAction;
 	QAction *renameAction;
+	QAction *newDirAction;
 	QAction *propertyAction;
 	TinyFTP *parentTinyFtp;
 	Command currentCommand;
 	QList<QFile *> openedDownloadingFiles;
 	QList<QFile *> openedUploadingFiles;
+	bool isListing;
 };
 
 #endif // REMOTEDIRWIDGET_H
