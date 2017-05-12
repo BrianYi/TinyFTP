@@ -724,7 +724,10 @@ void RemoteDirWidget::ftpCommandStarted(int)
 
 void RemoteDirWidget::ftpStateChanged(int state)
 {
-	if (state == QFtp::Unconnected) {
+	QFtp::Command cmd = ftpClient->currentCommand();
+	//*******************************
+	// 超时已被自动断开连接
+	if (/*state == QFtp::Unconnected && */cmd == QFtp::None) {
 		writeLog(tr("已从服务器断开连接"));
 		delDir(cacheDir);
 	}

@@ -10,10 +10,11 @@ TinyFTP::TinyFTP(QWidget *parent)
 	splitter = new QSplitter(Qt::Horizontal, this);
 	
 	userNameLabel = new QLabel(tr("用户:"), this);
-	userNameLineEdit = new QLineEdit(tr("brianyi"), this);
+	userNameComboBox = new QComboBox(this);
+	userNameComboBox->setEditable(true);
 
 	passwordLabel = new QLabel(tr("口令:"), this);
-	passwordLineEdit = new QLineEdit(tr("123456"), this);
+	passwordLineEdit = new QLineEdit(this);
     passwordLineEdit->setEchoMode(QLineEdit::Password);
 
 	portLabel = new QLabel(tr("端口:"), this);
@@ -30,7 +31,7 @@ TinyFTP::TinyFTP(QWidget *parent)
 
 	QToolBar *userInfoToolBar = addToolBar(tr("用户信息"));
 	userInfoToolBar->addWidget(userNameLabel);
-	userInfoToolBar->addWidget(userNameLineEdit);
+	userInfoToolBar->addWidget(userNameComboBox);
 	userInfoToolBar->addWidget(passwordLabel);
 	userInfoToolBar->addWidget(passwordLineEdit);
 	userInfoToolBar->addWidget(portLabel);
@@ -65,14 +66,20 @@ TinyFTP::TinyFTP(QWidget *parent)
 
 	readSettings();
 
+	connect(goPushButton, SIGNAL(clicked()), 
+		this, SLOT(connectToFTPServer()));
+	connect(anonymousCheckBox, SIGNAL(stateChanged(int)), 
+		this, SLOT(anonymous(int)));
+	connect(userNameComboBox, SIGNAL(currentIndexChanged(const QString &)), 
+		this, SLOT(currentUsernameChanged(const QString &)));
+
+	userNameComboBox->addItems(userNamePasswordMap.keys());
     addressComboBox->addItems(addressList);
+	//userNameComboBox->setCurrentIndex(0);
 
 	setWindowTitle(tr("TinyFTP"));
 
-    connect(goPushButton, SIGNAL(clicked()), 
-		this, SLOT(connectToFTPServer()));
-    connect(anonymousCheckBox, SIGNAL(stateChanged(int)), 
-		this, SLOT(anonymous(int)));
+    
 // 	connect(remoteDirTabWidget->currentWidget(), SIGNAL(ftpCommandDone(QFtp::Command, bool)), 
 // 		this, SLOT(ftpCommandDone(QFtp::Command, bool)));
 }
@@ -97,6 +104,10 @@ void TinyFTP::writeSettings()
 	QSettings settings(tr("MyQt4Projects"), tr("TinyFTP"));
     //settings.beginGroup("TinyFTP");
 	settings.setValue("geometry", saveGeometry());
+	QStringList usrnameList = userNamePasswordMap.keys();
+	QStringList passwdList = userNamePasswordMap.values();
+	settings.setValue("username", usrnameList);
+	settings.setValue("password", passwdList);
     settings.setValue("addressList", addressList);
 //     settings.endGroup();
 //     settings.beginGroup("localDirTabWidget");
@@ -112,6 +123,11 @@ void TinyFTP::readSettings()
 	QSettings settings(tr("MyQt4Projects"), tr("TinyFTP"));
     //settings.beginGroup("TinyFTP");
     restoreGeometry(settings.value("geometry").toByteArray());
+	QStringList usrnameList = settings.value("username").toStringList();
+	QStringList passwdList = settings.value("password").toStringList();
+	for (int i = 0; i < usrnameList.count(); i++) {
+		userNamePasswordMap[usrnameList[i]] = passwdList[i];
+	}
     addressList = settings.value("addressList").toStringList();
 //     settings.endGroup();
 //     settings.beginGroup("localDirTabWidget");
@@ -135,8 +151,13 @@ void TinyFTP::connectToFTPServer()
 
     QString port = portLineEdit->text();
     QString address = addressComboBox->currentText();
-    QString username = userNameLineEdit->text();
+    QString username = userNameComboBox->currentText();
     QString password = passwordLineEdit->text();
+	if (userNameComboBox->findText(username) == -1) {
+		userNameComboBox->addItem(username);
+	}
+	userNamePasswordMap[username] = password;
+
     if (addressComboBox->findText(address) == -1) {
         addressComboBox->addItem(address);
         addressList.append(address);
@@ -202,10 +223,17 @@ bool TinyFTP::okToConnectToFTPServer()
 void TinyFTP::anonymous(int state)
 {
     if (state == Qt::Checked) {
-        userNameLineEdit->setEnabled(false);
+        userNameComboBox->setEnabled(false);
         passwordLineEdit->setEnabled(false);
     } else {
-        userNameLineEdit->setEnabled(true);
+        userNameComboBox->setEnabled(true);
         passwordLineEdit->setEnabled(true);
     }
+}
+
+void TinyFTP::currentUsernameChanged(const QString &text)
+{
+	if (userNamePasswordMap.count(text)) {
+		passwordLineEdit->setText(userNamePasswordMap[text]);
+	}
 }

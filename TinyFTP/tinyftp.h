@@ -29,11 +29,12 @@ protected:
     bool okToConnectToFTPServer();
     private slots:
         void anonymous(int state);
+		void currentUsernameChanged(const QString &text);
 private:
 	TabWidget *remoteDirTabWidget;
 	TabWidget *localDirTabWidget;
 	QLabel *userNameLabel;
-	QLineEdit *userNameLineEdit;
+	QComboBox *userNameComboBox;
 	QLabel *passwordLabel;
 	QLineEdit *passwordLineEdit;
 	QLabel *portLabel;
@@ -44,6 +45,8 @@ private:
 	QPushButton *goPushButton;
 	QSplitter *splitter;
 	QStatusBar *ftpStatusBar;
+	QMap<QString, QString> userNamePasswordMap;
+	/*QStringList userNameList;*/
     QStringList addressList;
 };
 

@@ -125,7 +125,7 @@ QVariant DirTreeModel::headerData(int section, Qt::Orientation orientation, int 
 
 void DirTreeModel::setRootPath(const QString path)
 {
-    QDir rootPath(path);
+    QDir rootPath(QDir::cleanPath(path));
 	if (!rootPath.exists()) {
 		return ;
 	}

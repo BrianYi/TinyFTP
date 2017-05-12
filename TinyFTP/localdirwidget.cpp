@@ -67,6 +67,7 @@ LocalDirWidget::LocalDirWidget(QWidget *parent)
 	//*******************************
 	// context menu
 	contextMenu = new QMenu(this);
+	dotdotAction = new QAction(tr("上级目录"), this);
 	uploadAction = new QAction(tr("上传"), this);
 	queueAction = new QAction(tr("队列"), this);
     refreshAction = new QAction(tr("刷新"), this);
@@ -77,20 +78,26 @@ LocalDirWidget::LocalDirWidget(QWidget *parent)
 	renameAction = new QAction(tr("重命名"), this);
     newDirAction = new QAction(tr("新建文件夹"), this);
 	propertyAction = new QAction(tr("属性"), this);
+	contextMenu->addAction(dotdotAction);
+	contextMenu->addSeparator();
 	contextMenu->addAction(uploadAction);
 	contextMenu->addAction(queueAction);
+	contextMenu->addSeparator();
     contextMenu->addAction(refreshAction);
 	sendToAction = contextMenu->addMenu(new QMenu(tr("发送到"), this));
 	contextMenu->addAction(editAction);
 	contextMenu->addAction(readAction);
 	contextMenu->addAction(execAction);
+	contextMenu->addSeparator();
 	contextMenu->addAction(delAction);
 	contextMenu->addAction(renameAction);
     contextMenu->addAction(newDirAction);
+	contextMenu->addSeparator();
 	contextMenu->addAction(propertyAction);
 
     //*******************************
     // 控件 信号 & 槽
+	connect(dotdotDirToolButton, SIGNAL(clicked()), this, SLOT(dotdot()));
 	connect(localDirTreeView, SIGNAL(doubleClicked(const QModelIndex &)), this, SLOT(setRootIndex(const QModelIndex &)));
 	/*connect(localDirComboTreeView, SIGNAL())*/
     connect(localDirComboBox, SIGNAL(currentIndexChanged(const QString &)), this, SLOT(currentIndexChanged(const QString &)));
@@ -99,6 +106,7 @@ LocalDirWidget::LocalDirWidget(QWidget *parent)
 
 	//*******************************
 	// context menu slots & signals
+	connect(dotdotAction, SIGNAL(triggered()), this, SLOT(dotdot()));
 	connect(uploadAction, SIGNAL(triggered()), this, SLOT(upload()));
 	connect(queueAction, SIGNAL(triggered()), this, SLOT(queue()));
     connect(refreshAction, SIGNAL(triggered()), this, SLOT(refresh()));
@@ -163,7 +171,10 @@ void LocalDirWidget::setRootIndex(const QModelIndex &index)
 		return ;
 	}
 	Node *node = static_cast<Node*>(index.internalPointer());
-	if (node->isDir) {
+	if (node->fileName == tr("..")) {
+		dotdot();
+	} else if (node->isDir) {
+		dotdotDirToolButton->setEnabled(true);
         QString dir = node->filePath;
 		localDirTreeModel->setRootIndex(index);
 		localDirTreeView->resizeColumnToContents(0);
@@ -242,10 +253,21 @@ void LocalDirWidget::showContextMenu(const QModelIndex &index)
                     uploadAction->setEnabled(false);
                     sendToAction->setEnabled(false);
 			}
+			QModelIndex dotdotIndex = localDirTreeModel->index(0, 0);
+			Node *dotdotNode = static_cast<Node*>(dotdotIndex.internalPointer());
+			dotdotAction->setEnabled(dotdotNode->fileName == tr(".."));
 		}
 
 		contextMenu->exec(QCursor::pos());
 	}
+}
+
+void LocalDirWidget::dotdot()
+{
+	localDirTreeModel->setRootPath(currentDirPath() + QDir::separator() + tr(".."));
+	localDirTreeView->reset();
+	Node *dotdotNode = static_cast<Node*>(localDirTreeModel->index(0, 0).internalPointer());
+	dotdotDirToolButton->setEnabled(dotdotNode->fileName == tr(".."));
 }
 
 void LocalDirWidget::upload()

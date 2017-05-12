@@ -22,6 +22,7 @@ public:
 		void setRootIndex(const QModelIndex &index);
         void currentIndexChanged(const QString &text);
 		void showContextMenu(const QModelIndex &index);
+		void dotdot();
         void upload();
         void queue();
         void refresh();
@@ -45,6 +46,7 @@ private:
 	QToolButton *refreshDirToolButton;
 	QStatusBar *localDirStatusBar;
 	QMenu *contextMenu;
+	QAction *dotdotAction;
 	QAction *uploadAction;
 	QAction *queueAction;
     QAction *refreshAction;
