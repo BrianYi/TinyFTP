@@ -5,10 +5,13 @@
 #include <QFtp>
 
 class TinyFTP;
+class DirTreeView;
+class RemoteDirTreeView;
 class RemoteDirWidget : public QWidget
 {
 	Q_OBJECT
-
+public:
+    friend RemoteDirTreeView;
 public:
     enum Command { 
         //CMD_LIST,		// ÏÔÊ¾ÎÄ¼þ
@@ -75,7 +78,7 @@ private:
 	void processDirectory();
 	QString url(const QString &str) const;
 	/*DirTreeModel *remoteDirTreeModel;*/
-	QTreeView *remoteDirTreeView;
+	RemoteDirTreeView *remoteDirTreeView;
 	QFileSystemModel *remoteDirFileSystemModel;
 	QTreeView *remoteDirComboTreeView;
 	QComboBox *remoteDirComboBox;

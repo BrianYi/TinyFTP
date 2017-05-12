@@ -6,10 +6,12 @@
 class TinyFTP;
 class TabWidget;
 class DirTreeModel;
+class LocalDirTreeView;
 class LocalDirWidget : public QWidget
 {
 	Q_OBJECT
-
+public:
+    friend LocalDirTreeView;
 public:
 	LocalDirWidget(QWidget *parent);
 	~LocalDirWidget();
@@ -38,7 +40,7 @@ public:
 // 	friend TabWidget *TinyFTP::localDirTabWidget;
 private:
 	DirTreeModel *localDirTreeModel;
-	QTreeView *localDirTreeView;
+	LocalDirTreeView *localDirTreeView;
 	QFileSystemModel *localDirFileSystemModel;
 	QTreeView *localDirComboTreeView;
 	QComboBox *localDirComboBox;

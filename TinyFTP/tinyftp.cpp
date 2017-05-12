@@ -12,13 +12,17 @@ TinyFTP::TinyFTP(QWidget *parent)
 	userNameLabel = new QLabel(tr("用户:"), this);
 	userNameComboBox = new QComboBox(this);
 	userNameComboBox->setEditable(true);
+    userNameComboBox->setSizeAdjustPolicy(QComboBox::AdjustToContents);
 
 	passwordLabel = new QLabel(tr("口令:"), this);
 	passwordLineEdit = new QLineEdit(this);
     passwordLineEdit->setEchoMode(QLineEdit::Password);
+    passwordLineEdit->setFixedWidth(150);
 
 	portLabel = new QLabel(tr("端口:"), this);
 	portLineEdit = new QLineEdit(tr("21"), this);
+    portLineEdit->setFixedWidth(50);
+    portLineEdit->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
 
 	anonymousCheckBox = new QCheckBox(tr("匿名"), this);
 
@@ -26,19 +30,23 @@ TinyFTP::TinyFTP(QWidget *parent)
 
 	addressComboBox = new QComboBox(this);
 	addressComboBox->setEditable(true);
+    addressComboBox->setSizeAdjustPolicy(QComboBox::AdjustToContents);
 
 	goPushButton = new QPushButton(tr("转到"), this);
 
 	QToolBar *userInfoToolBar = addToolBar(tr("用户信息"));
 	userInfoToolBar->addWidget(userNameLabel);
 	userInfoToolBar->addWidget(userNameComboBox);
+    userInfoToolBar->addSeparator();
 	userInfoToolBar->addWidget(passwordLabel);
 	userInfoToolBar->addWidget(passwordLineEdit);
+    userInfoToolBar->addSeparator();
 	userInfoToolBar->addWidget(portLabel);
 	userInfoToolBar->addWidget(portLineEdit);
+    userInfoToolBar->addSeparator();
 	userInfoToolBar->addWidget(anonymousCheckBox);
 	userInfoToolBar->setAllowedAreas(Qt::TopToolBarArea | Qt::BottomToolBarArea);
-	addToolBarBreak();
+	//addToolBarBreak();
 
 	QToolBar *addressInfoToolBar = addToolBar(tr("地址信息"));
 	addressInfoToolBar->addWidget(addressLabel);
@@ -150,7 +158,7 @@ void TinyFTP::connectToFTPServer()
     }
 
     QString port = portLineEdit->text();
-    QString address = addressComboBox->currentText();
+    QString address = trimUrl(addressComboBox->currentText());
     QString username = userNameComboBox->currentText();
     QString password = passwordLineEdit->text();
 	if (userNameComboBox->findText(username) == -1) {
@@ -162,6 +170,8 @@ void TinyFTP::connectToFTPServer()
         addressComboBox->addItem(address);
         addressList.append(address);
     }
+    addressComboBox->setEditText(address);
+
     RemoteDirWidget *remoteDirWidget = qobject_cast<RemoteDirWidget*>(remoteDirTabWidget->currentWidget());
     if (anonymousCheckBox->isChecked()) {
         username = tr("");
@@ -236,4 +246,14 @@ void TinyFTP::currentUsernameChanged(const QString &text)
 	if (userNamePasswordMap.count(text)) {
 		passwordLineEdit->setText(userNamePasswordMap[text]);
 	}
+}
+
+QString TinyFTP::trimUrl(const QString &url)
+{
+    QString u = QDir::toNativeSeparators(url);
+    QString t = tr("ftp:%1%2").arg(QDir::separator()).arg(QDir::separator());
+    if (u.startsWith(t)) {
+        u = u.mid(t.length());
+    }
+    return u;
 }

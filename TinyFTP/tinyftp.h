@@ -31,6 +31,7 @@ protected:
         void anonymous(int state);
 		void currentUsernameChanged(const QString &text);
 private:
+    QString trimUrl(const QString &url);
 	TabWidget *remoteDirTabWidget;
 	TabWidget *localDirTabWidget;
 	QLabel *userNameLabel;

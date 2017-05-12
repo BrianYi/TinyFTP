@@ -3,6 +3,7 @@
 #include "localdirwidget.h"
 #include "tinyftp.h"
 #include "dirtreemodel.h"
+#include "remotedirtreeview.h"
 
 RemoteDirWidget::RemoteDirWidget(QWidget *parent)
 	: QWidget(parent)
@@ -12,7 +13,7 @@ RemoteDirWidget::RemoteDirWidget(QWidget *parent)
 
 	/*remoteDirTreeModel = 0;*/
 
-	remoteDirTreeView = new QTreeView(this);
+	remoteDirTreeView = new RemoteDirTreeView(this);
     /*remoteDirTreeView->setModel(remoteDirTreeModel);*/
     remoteDirTreeView->header()->setStretchLastSection(true);   
     remoteDirTreeView->resizeColumnToContents(0);
@@ -239,7 +240,8 @@ QString RemoteDirWidget::currentFilePathUrl() const
 
 QString RemoteDirWidget::currentDirPath() const
 {
-	return ((DirTreeModel*)remoteDirTreeView->model())->currentDirPath();
+    DirTreeModel *d = static_cast<DirTreeModel*>(remoteDirTreeView->model());
+	return d ? d->currentDirPath() : QString();
 }
 
 QString RemoteDirWidget::currentFilePath() const
@@ -529,12 +531,14 @@ void RemoteDirWidget::ftpListInfo(const QUrlInfo &urlInfo)
 //                 }
 //                 openedDownloadingFiles.append(file);
                 /*pendingDelFiles.append(decoded(urlInfo.name()));*/
-            QString path = cacheFilePath() + currentDelBaseDir + currentDelRelativeDir + urlInfo.name();
+            QString dirPath = currentDelBaseDir + currentDelRelativeDir + QDir::separator() + urlInfo.name();
+            QString path = cacheFilePath() + dirPath;
             QFile file(decoded(path));
             if (file.exists()) {
                 file.remove();
             }
             ftpClient->remove(urlInfo.name());
+            //writeLog(tr("文件 %1 删除完成").arg(decoded(dirPath)));
 /*            }*/
         } else if (urlInfo.isDir() && !urlInfo.isSymLink()) {
             hasDir = true;
@@ -672,6 +676,7 @@ void RemoteDirWidget::ftpDone(bool error)
                 QString delLocalDir = cacheFilePath() + dirPath;
                 delDir(delLocalDir);
                 ftpClient->rmdir(encoded(dirPath));
+                writeLog(tr("文件夹 %1 删除完成").arg(dirPath));
             }
             processDirectory();
         }
@@ -716,41 +721,51 @@ void RemoteDirWidget::showContextMenu(const QModelIndex &index)
 		foreach (QAction* action, actions)
 			action->setEnabled(true);
 
+        //*******************************
+        // 当前未连接上或是有命令未执行完，则禁用所有选项
+        if (!isConnected() || ftpClient->hasPendingCommands()) {
+            foreach (QAction* action, actions)
+                action->setEnabled(false);
+            goto menuexec;
+        }
+
 		//*******************************
 		// 处理 发送到 菜单
 
 
 		//*******************************
 		// 处理 所有上下文菜单的 使能 状态
-		Node *node = static_cast<Node*>(index.internalPointer());
-		QFileInfo fileInfo(node->filePath);
-		if (fileInfo.isDir() && node->fileName == tr("..")) {
-			foreach (QAction* action, actions)
-				action->setEnabled(false);
-		} else if (true/*fileInfo.isFile()*/) {
-			if (!fileInfo.isWritable()) {
-				editAction->setEnabled(false);
-				delAction->setEnabled(false);
-				renameAction->setEnabled(false);
-			}
-			if (!fileInfo.isReadable()) {
-				readAction->setEnabled(false);
-				downloadAction->setEnabled(false);
-				queueAction->setEnabled(false);
-			}
-			if (currentDirPathUrl() == QDir::separator()) {
-				dotdotAction->setEnabled(false);
-			} else {
-				DirTreeModel *r = static_cast<DirTreeModel*>(remoteDirTreeView->model());
-				Node *dotdotNode = static_cast<Node*>(r->index(0, 0).internalPointer());
-				dotdotAction->setEnabled(dotdotNode->fileName == tr(".."));
-			}
-			if (!isConnected() || ftpClient->hasPendingCommands()) {
-				foreach (QAction* action, actions)
-					action->setEnabled(false);
-			}
-		}
-
+        {
+            Node *node = static_cast<Node*>(index.internalPointer());
+            QFileInfo fileInfo(node->filePath);
+            if (fileInfo.isDir() && node->fileName == tr("..")) {
+                foreach (QAction* action, actions)
+                    action->setEnabled(false);
+            } else if (true/*fileInfo.isFile()*/) {
+                if (!fileInfo.isWritable()) {
+                    editAction->setEnabled(false);
+                    delAction->setEnabled(false);
+                    renameAction->setEnabled(false);
+                }
+                if (!fileInfo.isReadable()) {
+                    readAction->setEnabled(false);
+                    downloadAction->setEnabled(false);
+                    queueAction->setEnabled(false);
+                }
+                if (currentDirPathUrl() == QDir::separator()) {
+                    dotdotAction->setEnabled(false);
+                } else {
+                    DirTreeModel *r = static_cast<DirTreeModel*>(remoteDirTreeView->model());
+                    Node *dotdotNode = static_cast<Node*>(r->index(0, 0).internalPointer());
+                    dotdotAction->setEnabled(dotdotNode->fileName == tr(".."));
+                }
+                // 			if (!isConnected() || ftpClient->hasPendingCommands()) {
+                // 				foreach (QAction* action, actions)
+                // 					action->setEnabled(false);
+                // 			}
+            }
+        }
+menuexec:
 		contextMenu->exec(QCursor::pos());
 	}
 }

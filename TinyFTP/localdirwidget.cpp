@@ -4,6 +4,7 @@
 #include "remotedirwidget.h"
 #include "dirtreemodel.h"
 #include "tabwidget.h"
+#include "localdirtreeview.h"
 
 LocalDirWidget::LocalDirWidget(QWidget *parent)
 	: QWidget(parent)
@@ -13,7 +14,7 @@ LocalDirWidget::LocalDirWidget(QWidget *parent)
 	localDirTreeModel = new DirTreeModel(this);
 	localDirTreeModel->setRootPath(QDir::currentPath());
 
-	localDirTreeView = new QTreeView(this);
+	localDirTreeView = new LocalDirTreeView(this);
 	localDirTreeView->setModel(localDirTreeModel);
 	localDirTreeView->header()->setStretchLastSection(true);
 	localDirTreeView->resizeColumnToContents(0);
