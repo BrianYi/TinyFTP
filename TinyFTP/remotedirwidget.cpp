@@ -591,6 +591,15 @@ void RemoteDirWidget::ftpDone(bool error)
 			refresh();
 			currentCommand = CMD_NONE;
 		}
+	} else if (currentCommand == CMD_DEL) {
+		if (error) {
+			writeLog(tr("Error: ") + ftpClient->errorString());
+			currentCommand = CMD_NONE;
+			return ;
+		} else {
+			refresh();
+			currentCommand = CMD_NONE;
+		}
 	}
 }
 
@@ -714,7 +723,27 @@ void RemoteDirWidget::changePermission()
 
 void RemoteDirWidget::del()
 {
+	//*******************************
+	// 删除本地cache对应的文件
+	QString filePath = currentFilePath();
+	QFileInfo fileInfo(filePath);
+	bool isDir = false;
+	if (fileInfo.isDir()) {
+		isDir = true;
+		delDir(filePath);
+	} else {
+		QFile(filePath).remove();
+	}
 
+	//*******************************
+	// 删除远程文件
+	currentCommand = CMD_DEL;
+	ftpClient->cd(encoded(currentDirPathUrl()));
+	if (fileInfo.isDir()) {
+		ftpClient->rmdir(encoded(fileInfo.fileName()));
+	} else {
+		ftpClient->remove(encoded(fileInfo.fileName()));
+	}
 }
 
 void RemoteDirWidget::rename()
@@ -739,7 +768,8 @@ void RemoteDirWidget::newDir()
 succeed:
 	currentCommand = CMD_MKDIR;
 	dir.mkdir(dirName);
-	ftpClient->mkdir(dirName);
+	ftpClient->cd(encoded(currentDirPathUrl()));
+	ftpClient->mkdir(encoded(dirName));
 	//refresh();
 	return ;
 }
