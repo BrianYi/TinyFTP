@@ -21,6 +21,7 @@ public:
         CMD_EXEC,
         CMD_DEL,
         CMD_RENAME,
+		CMD_MKDIR,
         CMD_PROPERTY
     };
 	RemoteDirWidget(QWidget *parent);
@@ -48,6 +49,7 @@ protected:
 		void ftpStateChanged(int state);
 		void setRootIndex(const QModelIndex &index);
 		void showContextMenu(const QModelIndex &index);
+		void dotdot();
 		void download();
 		void queue();
 		void refresh();
@@ -67,7 +69,7 @@ private:
 	bool listing() const;
 	void setListing(bool isDoing);
 	void writeLog(const QString &logData);
-    void listDirectoryFiles(const QString &dir);
+    void listDirectoryFiles(const QString &dirUrl);
 	/*void download(const QString &path);*/
 	void processDirectory();
 	QString url(const QString &str) const;
@@ -111,6 +113,7 @@ private:
 // 	QAction *closeTabAction;
 // 	QAction *closeOtherTabAction;
 	QMenu *contextMenu;
+	QAction *dotdotAction;
 	QAction *downloadAction;
 	QAction *queueAction;
 	QAction *refreshAction;

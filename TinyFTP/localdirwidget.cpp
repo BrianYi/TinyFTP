@@ -266,6 +266,7 @@ void LocalDirWidget::dotdot()
 {
 	localDirTreeModel->setRootPath(currentDirPath() + QDir::separator() + tr(".."));
 	localDirTreeView->reset();
+	localDirTreeView->resizeColumnToContents(0);
 	Node *dotdotNode = static_cast<Node*>(localDirTreeModel->index(0, 0).internalPointer());
 	dotdotDirToolButton->setEnabled(dotdotNode->fileName == tr(".."));
 }
