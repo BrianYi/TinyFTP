@@ -95,10 +95,11 @@ bool DirTreeModel::setData(const QModelIndex & index, const QVariant & value, in
     }
 
     Node *fileNode = static_cast<Node*>(index.internalPointer());
-    if (index.column() == 0) {
+    if (index.column() == 0 && role == Qt::EditRole) {
         fileNode->fileName = value.toString();
+        emit editingFinished(index);
     }
-    return false;
+    return true;
 }
 
 QVariant DirTreeModel::headerData(int section, Qt::Orientation orientation, int role /*= Qt::DisplayRole*/) const

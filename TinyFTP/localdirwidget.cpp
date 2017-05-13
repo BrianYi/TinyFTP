@@ -110,6 +110,7 @@ LocalDirWidget::LocalDirWidget(QWidget *parent)
     connect(localDirComboBox, SIGNAL(currentIndexChanged(const QString &)), this, SLOT(currentIndexChanged(const QString &)));
 	connect(localDirTreeView, SIGNAL(pressed(const QModelIndex &)), this, SLOT(showContextMenu(const QModelIndex &)));
     connect(refreshDirToolButton, SIGNAL(clicked()), this, SLOT(refresh()));
+    connect(localDirTreeModel, SIGNAL(editingFinished(const QModelIndex &)), this, SLOT(editingFinished(const QModelIndex &)));
 
 	//*******************************
 	// context menu slots & signals
@@ -355,4 +356,14 @@ succeed:
     dir.mkdir(dirName);
     refresh();
     return ;
+}
+
+void LocalDirWidget::editingFinished(const QModelIndex &index)
+{
+    Node *n = static_cast<Node*>(index.internalPointer());
+    QFile file(n->filePath);
+    if (QFileInfo(n->filePath).fileName() != n->fileName) {
+        file.rename(n->fileName);
+        n->filePath = n->dirPath + QDir::separator() + n->fileName;
+    }
 }

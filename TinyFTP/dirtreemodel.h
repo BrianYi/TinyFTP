@@ -58,6 +58,8 @@ public:
 	void sort(int column, Qt::SortOrder order = Qt::AscendingOrder );
 	QDir currentDir(bool *ok = 0) const;
 	QString currentDirPath() const;
+signals:
+    void editingFinished(const QModelIndex &index);
 	public slots:
 		void setRootIndex(const QModelIndex &index);
 private:

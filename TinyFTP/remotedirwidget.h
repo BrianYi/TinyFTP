@@ -55,6 +55,7 @@ protected:
 		void ftpStateChanged(int state);
 		void setRootIndex(const QModelIndex &index);
 		void showContextMenu(const QModelIndex &index);
+        void editingFinished(const QModelIndex &index);
 		void dotdot();
 		void download();
 		void queue();
@@ -121,6 +122,9 @@ private:
     //QString currentDelLocalDir;
     QStack<QString> pendingDelRelativeDirs;
     bool hasDir;
+
+    QString currentOldFileName;
+    QString currentNewFileName;
 // 	QMenu *tabMenu;
 // 	QAction *newTabAction;
 // 	QAction *closeTabAction;

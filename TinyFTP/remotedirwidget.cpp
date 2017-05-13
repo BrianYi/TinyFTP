@@ -133,7 +133,7 @@ RemoteDirWidget::RemoteDirWidget(QWidget *parent)
 	connect(this, SIGNAL(ftpCommandDone(QFtp::Command, bool)), 
 		parentTinyFtp, SLOT(ftpCommandDone(QFtp::Command, bool)));
 	connect(refreshDirToolButton, SIGNAL(clicked()), this, SLOT(refresh()));
-
+    connect(remoteDirTreeModel, SIGNAL(editingFinished(const QModelIndex &)), this, SLOT(editingFinished(const QModelIndex &)));
 	//*******************************
 	// context menu slots & signals
 	connect(dotdotAction, SIGNAL(triggered()), this, SLOT(dotdot()));
@@ -700,6 +700,19 @@ void RemoteDirWidget::ftpDone(bool error)
             }
             processDirectory();
         }
+	} else if (currentCommand == CMD_RENAME) {
+        if (error) {
+            writeLog(tr("Error: ") + ftpClient->errorString());
+            //             qDeleteAll(openedDownloadingFiles);
+            //             openedDownloadingFiles.clear();
+            currentCommand = CMD_NONE;
+            return ;
+        } else {
+            writeLog(tr("已将文件 %1 重命名为 %2").arg(
+                currentOldFileName).arg(currentNewFileName));
+
+            currentCommand = CMD_NONE;
+        }
 	}
 }
 
@@ -758,7 +771,7 @@ void RemoteDirWidget::showContextMenu(const QModelIndex &index)
             } else if (true/*fileInfo.isFile()*/) {
                 if (!fileInfo.isWritable()) {
                     editAction->setEnabled(false);
-                    delAction->setEnabled(false);
+                    /*delAction->setEnabled(false);*/
                     renameAction->setEnabled(false);
                 }
                 if (!fileInfo.isReadable()) {
@@ -1071,5 +1084,25 @@ void RemoteDirWidget::disconnect()
         ftpClient->close();
 //         DirTreeModel *dirTreeModel = static_cast<DirTreeModel*>(remoteDirTreeView->model());
 //         delete dirTreeModel;
+    }
+}
+
+void RemoteDirWidget::editingFinished(const QModelIndex &index)
+{
+    Node *n = static_cast<Node*>(index.internalPointer());
+    //QFile file(n->filePath);
+    QString oldName = QFileInfo(n->filePath).fileName();
+    currentOldFileName = "";
+    currentNewFileName = "";
+    if (oldName != n->fileName) {
+        currentCommand = CMD_RENAME;
+        currentOldFileName = currentDirPathUrl() + QDir::separator() + oldName;
+        currentNewFileName = currentDirPathUrl() + QDir::separator() + n->fileName;
+        //file.rename(n->fileName);
+        bool is = QFile::rename(n->filePath, n->dirPath + QDir::separator() + n->fileName);
+        n->filePath = n->dirPath + QDir::separator() + n->fileName;
+        ftpClient->cd(encoded(currentDirPathUrl()));
+        ftpClient->rename(encoded(oldName), encoded(n->fileName));
+        remoteDirTreeView->resizeColumnsToContents();
     }
 }

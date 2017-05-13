@@ -24,6 +24,7 @@ public:
 		void setRootIndex(const QModelIndex &index);
         void currentIndexChanged(const QString &text);
 		void showContextMenu(const QModelIndex &index);
+        void editingFinished(const QModelIndex &index);
 		void dotdot();
         void upload();
         void queue();
