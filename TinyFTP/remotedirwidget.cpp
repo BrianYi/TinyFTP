@@ -11,10 +11,10 @@ RemoteDirWidget::RemoteDirWidget(QWidget *parent)
 	parentTinyFtp = reinterpret_cast<TinyFTP*>(parent);
 	currentCommand = CMD_NONE;
 
-	/*remoteDirTreeModel = 0;*/
+	remoteDirTreeModel = new DirTreeModel(this);
 
 	remoteDirTreeView = new RemoteDirTreeView(this);
-    /*remoteDirTreeView->setModel(remoteDirTreeModel);*/
+    remoteDirTreeView->setModel(remoteDirTreeModel);
     remoteDirTreeView->header()->setStretchLastSection(true);   
     remoteDirTreeView->resizeColumnToContents(0);
 	remoteDirTreeView->setAlternatingRowColors(true);
@@ -112,6 +112,7 @@ RemoteDirWidget::RemoteDirWidget(QWidget *parent)
 	isListing = false;
 
 /*	connect(remoteDirTableView, SIGNAL(doubleClicked(const QModelIndex &)), remoteDirTableModel, SLOT(setRootIndex(const QModelIndex &)));*/
+    connect(connectButton, SIGNAL(clicked()), this, SLOT(connectOrDisconnect()));
 	connect(dotdotDirToolButton, SIGNAL(clicked()), this, SLOT(dotdot()));
     connect(remoteDirTreeView, SIGNAL(doubleClicked(const QModelIndex &)), 
 		this, SLOT(setRootIndex(const QModelIndex &)));
@@ -188,7 +189,7 @@ void RemoteDirWidget::connectToHost(const QString &address, const QString &port,
 	urlAddress.setPassword(password);
 
 	connectButton->setText(tr("连接"));
-	connectButton->setEnabled(false);
+	/*connectButton->setEnabled(false);*/
 	dotdotDirToolButton->setEnabled(false);
 	refreshDirToolButton->setEnabled(false);
 	remoteDirComboBox->setEnabled(false);
@@ -200,10 +201,8 @@ void RemoteDirWidget::connectToHost(const QString &address, const QString &port,
 //          LOGSTREAM << DataPair(this, tr("Error: URL must start with 'ftp:'"));
 //          return false;
 //     }
-	if (ftpClient->state() != QFtp::Unconnected) {
-		ftpClient->close();
-        DirTreeModel *dirTreeModel = static_cast<DirTreeModel*>(remoteDirTreeView->model());
-        delete dirTreeModel;
+	if (isConnected()) {
+		disconnect();
 	}
     ftpClient->connectToHost(urlAddress.host(), urlAddress.port());
     
@@ -255,8 +254,12 @@ QString RemoteDirWidget::currentFilePath() const
 
 void RemoteDirWidget::reconnect()
 {
-	connectToHost(urlAddress.host(), QString::number(urlAddress.port()), 
-		urlAddress.userName(), urlAddress.password());
+    connectButton->setText(tr("连接"));
+    /*connectButton->setEnabled(false);*/
+    dotdotDirToolButton->setEnabled(false);
+    refreshDirToolButton->setEnabled(false);
+    remoteDirComboBox->setEnabled(false);
+	ftpClient->connectToHost(urlAddress.host(), urlAddress.port());
 }
 
 void RemoteDirWidget::reset()
@@ -272,8 +275,9 @@ void RemoteDirWidget::reset()
 
 void RemoteDirWidget::closeEvent(QCloseEvent *event)
 {
-	if (ftpClient->state() != QFtp::Unconnected)
-		ftpClient->close();
+	if (isConnected()) {
+        disconnect();
+    }
 }
 
 void RemoteDirWidget::download()
@@ -449,16 +453,20 @@ void RemoteDirWidget::processDirectory()
 	}
 }
 
-void RemoteDirWidget::listDirectoryFiles(const QString &dirUrl)
+void RemoteDirWidget::listDirectoryFiles(const QString &dirName/* = ""*/)
 {
 	/*currentCommand = CMD_LIST;*/
 	if (!isConnected()) {
 		reconnect();
 	}
 	setListing(true);
-	currentListDir = (dirUrl == "" ? QDir::separator() : dirUrl);
-	currentListLocalDir = cacheDir + dirUrl;
-	QDir(".").mkpath(currentListLocalDir);
+	currentListDir = /*(dirUrl == "" ? QDir::separator() : dirUrl)*/dirName.isEmpty() ? currentDirPathUrl() :
+        QDir::toNativeSeparators(QDir::cleanPath(currentDirPathUrl() + QDir::separator() + dirName));
+	currentListLocalDir = QDir::toNativeSeparators(QDir::cleanPath(cacheDir + currentListDir));
+    if (QDir().exists(currentListLocalDir)) {
+        delDir(currentListLocalDir);
+    }
+	QDir().mkpath(currentListLocalDir);
 	//ftpClient->cd(currentListDir);
 	ftpClient->list(encoded(currentListDir));
 }
@@ -561,25 +569,35 @@ void RemoteDirWidget::ftpDone(bool error)
 			setListing(false);
 			return ;
 		} else {
-			DirTreeModel *dirTreeModel = static_cast<DirTreeModel*>(remoteDirTreeView->model());
-			if (dirTreeModel) {
-				delete dirTreeModel;
-			}
-			dirTreeModel = new DirTreeModel(this);
+// 			DirTreeModel *dirTreeModel = static_cast<DirTreeModel*>(remoteDirTreeView->model());
+// 			if (dirTreeModel) {
+// 				delete dirTreeModel;
+// 			}
+// 			dirTreeModel = new DirTreeModel(this);
 
-			dirTreeModel->setRootPath(currentListLocalDir);
-			remoteDirTreeView->setModel(dirTreeModel);
+			remoteDirTreeView->setRootPath(currentListLocalDir);
+			//remoteDirTreeView->setModel(dirTreeModel);
 			remoteDirTreeView->resizeColumnToContents(0);
-			if (dirTreeModel->rowCount()) {
-				for (int row = 0; row < dirTreeModel->rowCount(); row++) {
-					QModelIndex index = dirTreeModel->index(row, 1);
-					QModelIndex index2 = dirTreeModel->index(row, 3);
-					Node *node = static_cast<Node*>(index.internalPointer());
-					QUrlInfo urlInfo = filesInfoMap[node->fileName];
-					if (node->isFile) {
-						dirTreeModel->setData(index, urlInfo.size()/*filesSize.takeFirst()*/);
-					}
-					dirTreeModel->setData(index2, urlInfo.lastModified().toString("yyyy/MM/dd hh:mm"));
+			if (remoteDirTreeView->rowCount()) {
+				for (int row = 0; row < remoteDirTreeView->rowCount(); row++) {
+//                     QModelIndex index = remoteDirTreeModel->index(row, 1);
+//                     QModelIndex index2 = remoteDirTreeModel->index(row, 3);
+                    Node *n1 = remoteDirTreeView->item(row, 1);
+                    Node *n2 = remoteDirTreeView->item(row, 3);
+                    QUrlInfo urlInfo = filesInfoMap[n1->fileName];
+                    if (n1->isFile) {
+                        n1->fileSize = urlInfo.size();
+                    }
+                    n2->modifyDate = urlInfo.lastModified().toString("yyyy/MM/dd hh:mm");
+
+// 					QModelIndex index = remoteDirTreeModel->index(row, 1);
+// 					QModelIndex index2 = remoteDirTreeModel->index(row, 3);
+// 					Node *node = static_cast<Node*>(index.internalPointer());
+// 					QUrlInfo urlInfo = filesInfoMap[node->fileName];
+// 					if (node->isFile) {
+// 						remoteDirTreeModel->setData(index, urlInfo.size()/*filesSize.takeFirst()*/);
+// 					}
+// 					remoteDirTreeModel->setData(index2, urlInfo.lastModified().toString("yyyy/MM/dd hh:mm"));
 
 	// 				if (node->isDir && node->fileName == tr("..")) {
 	// 					dirTreeModel->setData(index2, "");
@@ -688,25 +706,19 @@ void RemoteDirWidget::setRootIndex(const QModelIndex &index)
 	if (!index.isValid()) {
 		return ;
 	}
+    if (!isConnected()) {
+        reconnect();
+        return ;
+    }
 	Node *node = static_cast<Node*>(index.internalPointer());
 	if (node->fileName == tr("..")) {
 		if (currentDirPathUrl() == QDir::separator()) {
-			return ;
-		}
+            return ;
+		} 
 		dotdot();
 	} else if (node->isDir) {
-		dotdotDirToolButton->setEnabled(true);
-//        if (node->fileName == tr("..")) {
-//             if (!currentListDir.endsWith(QDir::separator()) || currentListDir == QDir::separator())
-//                 return ;
-//             currentListDir.resize(currentListDir.length() - 1);
-//             int lastSeparatorIndex = currentListDir.lastIndexOf(QDir::separator());
-//             if (lastSeparatorIndex != -1)
-//                 currentListDir = currentListDir.mid(0, lastSeparatorIndex + 1);
-// 			currentListDir = url(node->dirPath);
-//         } else
-//		currentListDir = url(node->filePath);
-        listDirectoryFiles(url(node->filePath));
+		/*dotdotDirToolButton->setEnabled(true);*/
+        listDirectoryFiles(node->fileName);
 	}
 	/*remoteDirTreeModel->set(index);*/
 // 	remoteDirTreeView->resizeColumnToContents(0);
@@ -723,7 +735,7 @@ void RemoteDirWidget::showContextMenu(const QModelIndex &index)
 
         //*******************************
         // 当前未连接上或是有命令未执行完，则禁用所有选项
-        if (!isConnected() || ftpClient->hasPendingCommands()) {
+        if (/*!isConnected() || */ftpClient->hasPendingCommands()) {
             foreach (QAction* action, actions)
                 action->setEnabled(false);
             goto menuexec;
@@ -755,8 +767,8 @@ void RemoteDirWidget::showContextMenu(const QModelIndex &index)
                 if (currentDirPathUrl() == QDir::separator()) {
                     dotdotAction->setEnabled(false);
                 } else {
-                    DirTreeModel *r = static_cast<DirTreeModel*>(remoteDirTreeView->model());
-                    Node *dotdotNode = static_cast<Node*>(r->index(0, 0).internalPointer());
+/*                    DirTreeModel *r = static_cast<DirTreeModel*>(remoteDirTreeView->model());*/
+                    Node *dotdotNode = remoteDirTreeView->item(0, 0);
                     dotdotAction->setEnabled(dotdotNode->fileName == tr(".."));
                 }
                 // 			if (!isConnected() || ftpClient->hasPendingCommands()) {
@@ -772,15 +784,17 @@ menuexec:
 
 void RemoteDirWidget::dotdot()
 {
-	DirTreeModel *d = static_cast<DirTreeModel*>(remoteDirTreeView->model());
-	d->setRootPath(currentDirPath() + QDir::separator() + tr(".."));
-	remoteDirTreeView->reset();
-	remoteDirTreeView->resizeColumnToContents(0);
+// 	DirTreeModel *d = static_cast<DirTreeModel*>(remoteDirTreeView->model());
+// 	d->setRootPath(currentDirPath() + QDir::separator() + tr(".."));
+//     remoteDirTreeView->setRootPath(currentDirPath() + QDir::separator() + tr(".."));
+// 	remoteDirTreeView->reset();
+// 	remoteDirTreeView->resizeColumnToContents(0);
+    listDirectoryFiles(tr(".."));
 	
 	if (currentDirPathUrl() == QDir::separator())
 		dotdotDirToolButton->setEnabled(false);
 	else {
-		Node *dotdotNode = static_cast<Node*>(d->index(0, 0).internalPointer());
+		Node *dotdotNode = remoteDirTreeView->item(0, 0);
 		dotdotDirToolButton->setEnabled(dotdotNode->fileName == tr(".."));
 	}
 }
@@ -792,8 +806,8 @@ void RemoteDirWidget::queue()
 
 void RemoteDirWidget::refresh()
 {
-	QString curDirPathUrl = currentDirPathUrl();
-	listDirectoryFiles(curDirPathUrl);
+	/*QString curDirPathUrl = currentDirPathUrl();*/
+	listDirectoryFiles(/*curDirPathUrl*/);
 }
 
 void RemoteDirWidget::edit()
@@ -932,7 +946,13 @@ void RemoteDirWidget::ftpStateChanged(int state)
 	// 超时已被自动断开连接
 	if (/*state == QFtp::Unconnected && */cmd == QFtp::None) {
 		writeLog(tr("已从服务器断开连接"));
-		delDir(cacheDir);
+		disconnect();
+        delDir(cacheDir);
+        dotdotDirToolButton->setEnabled(false);
+        refreshDirToolButton->setEnabled(false);
+        remoteDirComboBox->setEnabled(false);
+        connectButton->setText(tr("连接"));
+        connectButton->setEnabled(true);
 	}
 }
 
@@ -945,23 +965,23 @@ void RemoteDirWidget::ftpCommandFinished(int,bool error)
 			ftpClient->login(urlAddress.userName(), urlAddress.password());
         } else {
             writeLog(tr("不能连接到服务器(主机未找到: %1)").arg(urlAddress.host()));
-			if (ftpClient->state() != QFtp::Unconnected) {
-				ftpClient->close();
+			if (isConnected()) {
+                disconnect();
 			}
         }
     } else if (command == QFtp::Login) {
         if (!error) {
             writeLog(tr("连接成功(登录成功)"));
 			QString path = urlAddress.path();
-			if (path.isEmpty()) {
-				path = QDir::separator();
-			}
+// 			if (path.isEmpty()) {
+// 				path = QDir::separator();
+// 			}
             cacheDir = tr("cache") + QDir::separator() + urlAddress.host();
 			listDirectoryFiles(path);
 
 			connectButton->setText(tr("断开"));
 			connectButton->setEnabled(true);
-			/*dotdotDirToolButton->setEnabled(false);*/
+			dotdotDirToolButton->setEnabled(currentDirPathUrl() != QDir::separator());
 			refreshDirToolButton->setEnabled(true);
 			remoteDirComboBox->setEnabled(true);
 
@@ -972,14 +992,19 @@ void RemoteDirWidget::ftpCommandFinished(int,bool error)
 // 			remoteDirComboBox->setView(remoteDirComboTreeView);
         } else {
             writeLog(tr("连接失败(登录失败), 用户名或密码错误!")/* + ftpClient->errorString()*/);
-			if (ftpClient->state() != QFtp::Unconnected) {
-				ftpClient->close();
+			if (isConnected()) {
+                disconnect();
 			}
         }
     } else if (command == QFtp::Close) {
         if (!error) {
             writeLog(tr("已从服务器断开连接"));
             delDir(cacheDir);
+            dotdotDirToolButton->setEnabled(false);
+            refreshDirToolButton->setEnabled(false);
+            remoteDirComboBox->setEnabled(false);
+            connectButton->setText(tr("连接"));
+            connectButton->setEnabled(true);
         } else {
             writeLog(tr("无法断开连接, ") + ftpClient->errorString());
         }
@@ -1025,4 +1050,24 @@ QString RemoteDirWidget::url(const QString &str) const
 QString RemoteDirWidget::cacheFilePath() const
 {
     return QDir::toNativeSeparators(QDir().absolutePath() + QDir::separator() + cacheDir);
+}
+
+void RemoteDirWidget::connectOrDisconnect()
+{
+    if (connectButton->text() == tr("连接")) {
+        connectButton->setText(tr("断开"));
+        reconnect();
+    } else {
+        connectButton->setText(tr("连接"));
+        disconnect();
+    }
+}
+
+void RemoteDirWidget::disconnect()
+{
+    if (isConnected()) {
+        ftpClient->close();
+//         DirTreeModel *dirTreeModel = static_cast<DirTreeModel*>(remoteDirTreeView->model());
+//         delete dirTreeModel;
+    }
 }

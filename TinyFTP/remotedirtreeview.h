@@ -4,6 +4,7 @@
 #include <QTreeView>
 
 class RemoteDirWidget;
+struct Node;
 class RemoteDirTreeView : public QTreeView
 {
     Q_OBJECT
@@ -11,6 +12,12 @@ class RemoteDirTreeView : public QTreeView
 public:
     RemoteDirTreeView(QWidget *parent);
     ~RemoteDirTreeView();
+    int rowCount();
+    int columnCount();
+    void setRootPath(const QString path);
+    void sort(int column, Qt::SortOrder order = Qt::AscendingOrder);
+    QString currentDirPath() const;
+    Node* item(int row, int column) const;
 protected:
     void contextMenuEvent(QContextMenuEvent *event);
 private:

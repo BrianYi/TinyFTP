@@ -88,22 +88,22 @@ QVariant DirTreeModel::data(const QModelIndex &index, int role /*= Qt::DisplayRo
     return QVariant();
 }
 
-bool DirTreeModel::setData(const QModelIndex & index, const QVariant & value, int role /*= Qt::EditRole */)
-{
-    if (!index.isValid() || !rootNode || rootNode->children.isEmpty() || index.row() >= rootNode->children.count()) {
-        return false;
-    }
-
-    Node *fileNode = static_cast<Node*>(index.internalPointer());
-    if (index.column() == 1 && role == Qt::EditRole) {
-        fileNode->fileSize = value.toLongLong();
-        return true;
-    } else if (index.column() == 3 && role == Qt::EditRole) {
-        fileNode->modifyDate = value.toString();
-        return true;
-    }
-    return false;
-}
+// bool DirTreeModel::setData(const QModelIndex & index, const QVariant & value, int role /*= Qt::EditRole */)
+// {
+//     if (!index.isValid() || !rootNode || rootNode->children.isEmpty() || index.row() >= rootNode->children.count()) {
+//         return false;
+//     }
+// 
+//     Node *fileNode = static_cast<Node*>(index.internalPointer());
+//     if (index.column() == 1 && role == Qt::EditRole) {
+//         fileNode->fileSize = value.toLongLong();
+//         return true;
+//     } else if (index.column() == 3 && role == Qt::EditRole) {
+//         fileNode->modifyDate = value.toString();
+//         return true;
+//     }
+//     return false;
+// }
 
 QVariant DirTreeModel::headerData(int section, Qt::Orientation orientation, int role /*= Qt::DisplayRole*/) const
 {

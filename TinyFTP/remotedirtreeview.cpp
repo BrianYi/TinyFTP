@@ -42,3 +42,43 @@ void RemoteDirTreeView::contextMenuEvent(QContextMenuEvent *event)
 menuexec:
     p->contextMenu->exec(QCursor::pos());
 }
+
+int RemoteDirTreeView::rowCount()
+{
+    DirTreeModel *d = static_cast<DirTreeModel *>(model());
+    return d ? d->rowCount() : 0;
+}
+
+int RemoteDirTreeView::columnCount()
+{
+    DirTreeModel *d = static_cast<DirTreeModel *>(model());
+    return d ? d->columnCount() : 0;
+}
+
+void RemoteDirTreeView::setRootPath(const QString path)
+{
+    DirTreeModel *d = static_cast<DirTreeModel *>(model());
+    if (d)
+        d->setRootPath(path);
+}
+
+void RemoteDirTreeView::sort(int column, Qt::SortOrder order /* = Qt::AscendingOrder */)
+{
+    DirTreeModel *d = static_cast<DirTreeModel *>(model());
+    if (d)
+        d->sort(column, order);
+}
+
+QString RemoteDirTreeView::currentDirPath() const
+{
+    DirTreeModel *d = static_cast<DirTreeModel *>(model());
+    return d ? d->currentDirPath() : QString();
+}
+
+Node* RemoteDirTreeView::item(int row, int column) const
+{
+    DirTreeModel *d = static_cast<DirTreeModel *>(model());
+    if (!d) 
+        return 0;
+    return static_cast<Node*>(d->index(row, column).internalPointer());
+}

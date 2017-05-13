@@ -6,6 +6,7 @@
 
 class TinyFTP;
 class DirTreeView;
+class DirTreeModel;
 class RemoteDirTreeView;
 class RemoteDirWidget : public QWidget
 {
@@ -41,8 +42,9 @@ public:
 	QString currentFilePath() const;
     QString cacheFilePath() const;
 	/*static bool delDir(const QString &dirPath);*/
-	void reconnect();
 	void reset();
+    void reconnect();  
+    void disconnect();
 protected:
 	void closeEvent(QCloseEvent *event);
 	private slots:
@@ -64,6 +66,7 @@ protected:
 		void rename();
 		void newDir();
 		void property();
+        void connectOrDisconnect();
 signals:
     void updateLoginInfo(const QString &usrname, 
         const QString &pwd, const QString &port, 
@@ -73,11 +76,11 @@ private:
 	bool listing() const;
 	void setListing(bool isDoing);
 	void writeLog(const QString &logData);
-    void listDirectoryFiles(const QString &dirUrl);
+    void listDirectoryFiles(const QString &dirName = "");
 	/*void download(const QString &path);*/
 	void processDirectory();
 	QString url(const QString &str) const;
-	/*DirTreeModel *remoteDirTreeModel;*/
+	DirTreeModel *remoteDirTreeModel;
 	RemoteDirTreeView *remoteDirTreeView;
 	QFileSystemModel *remoteDirFileSystemModel;
 	QTreeView *remoteDirComboTreeView;

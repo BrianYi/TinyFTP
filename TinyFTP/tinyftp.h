@@ -27,6 +27,7 @@ protected:
 	void readSettings();
 	void closeEvent(QCloseEvent *event);
     bool okToConnectToFTPServer();
+    void resizeEvent(QResizeEvent *event);
     private slots:
         void anonymous(int state);
 		void currentUsernameChanged(const QString &text);

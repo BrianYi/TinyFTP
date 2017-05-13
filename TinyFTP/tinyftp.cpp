@@ -12,12 +12,12 @@ TinyFTP::TinyFTP(QWidget *parent)
 	userNameLabel = new QLabel(tr("用户:"), this);
 	userNameComboBox = new QComboBox(this);
 	userNameComboBox->setEditable(true);
-    userNameComboBox->setSizeAdjustPolicy(QComboBox::AdjustToContents);
+    userNameComboBox->setFixedWidth(100);
 
 	passwordLabel = new QLabel(tr("口令:"), this);
 	passwordLineEdit = new QLineEdit(this);
     passwordLineEdit->setEchoMode(QLineEdit::Password);
-    passwordLineEdit->setFixedWidth(150);
+    passwordLineEdit->setFixedWidth(100);
 
 	portLabel = new QLabel(tr("端口:"), this);
 	portLineEdit = new QLineEdit(tr("21"), this);
@@ -48,10 +48,13 @@ TinyFTP::TinyFTP(QWidget *parent)
 	userInfoToolBar->setAllowedAreas(Qt::TopToolBarArea | Qt::BottomToolBarArea);
 	//addToolBarBreak();
 
+    QSplitter *hSplitter = new QSplitter(Qt::Horizontal, this);
+    hSplitter->addWidget(addressLabel);
+    hSplitter->addWidget(addressComboBox);
+    hSplitter->addWidget(goPushButton);
+    hSplitter->setStretchFactor(1,1);
 	QToolBar *addressInfoToolBar = addToolBar(tr("地址信息"));
-	addressInfoToolBar->addWidget(addressLabel);
-	addressInfoToolBar->addWidget(addressComboBox);
-	addressInfoToolBar->addWidget(goPushButton);
+    addressInfoToolBar->addWidget(hSplitter);
 	addressInfoToolBar->setAllowedAreas(Qt::TopToolBarArea | Qt::BottomToolBarArea);
 
 	localDirTabWidget = new TabWidget(this);
@@ -256,4 +259,9 @@ QString TinyFTP::trimUrl(const QString &url)
         u = u.mid(t.length());
     }
     return u;
+}
+
+void TinyFTP::resizeEvent(QResizeEvent *event)
+{
+    
 }
