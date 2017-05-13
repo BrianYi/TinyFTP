@@ -11,6 +11,7 @@ class LocalDirTreeView : public QTreeView
 public:
     LocalDirTreeView(QWidget *parent);
     ~LocalDirTreeView();
+    void resizeColumnsToContents();
 protected:
     void contextMenuEvent(QContextMenuEvent *event);
 private:

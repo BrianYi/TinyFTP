@@ -18,6 +18,7 @@ public:
     void sort(int column, Qt::SortOrder order = Qt::AscendingOrder);
     QString currentDirPath() const;
     Node* item(int row, int column) const;
+    void resizeColumnsToContents();
 protected:
     void contextMenuEvent(QContextMenuEvent *event);
 private:

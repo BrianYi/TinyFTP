@@ -15,16 +15,22 @@ LocalDirWidget::LocalDirWidget(QWidget *parent)
 	localDirTreeModel->setRootPath(QDir::currentPath());
 
 	localDirTreeView = new LocalDirTreeView(this);
-	localDirTreeView->setModel(localDirTreeModel);
+    localDirTreeView->setModel(localDirTreeModel);
 	localDirTreeView->header()->setStretchLastSection(true);
-	localDirTreeView->resizeColumnToContents(0);
+	localDirTreeView->resizeColumnsToContents();
     localDirTreeView->setAlternatingRowColors(true);
-	localDirTreeView->setSelectionMode(QAbstractItemView::SingleSelection);
+	localDirTreeView->setSelectionMode(QAbstractItemView::ContiguousSelection);
 	localDirTreeView->setSelectionBehavior(QAbstractItemView::SelectRows);
-	localDirTreeView->setSortingEnabled(true);
-	localDirTreeView->sortByColumn(0, Qt::AscendingOrder);
-    localDirTreeView->setRootIsDecorated(false);
+    localDirTreeView->setSortingEnabled(true);
+    localDirTreeView->sortByColumn(0, Qt::AscendingOrder);
     localDirTreeView->setItemsExpandable(false);
+    localDirTreeView->setRootIsDecorated(false);
+    localDirTreeView->setExpandsOnDoubleClick(false);
+    localDirTreeView->setEditTriggers(QAbstractItemView::SelectedClicked | QAbstractItemView::DoubleClicked);
+    
+    /*localDirTreeView->setItemsExpandable(fqalse);*/
+
+    //localDirTreeView->setEditTriggers(QAbstractItemView::DoubleClicked);
 
 	localDirFileSystemModel = new QFileSystemModel(this);
 	localDirFileSystemModel->setFilter(QDir::AllDirs | QDir::Drives | 
@@ -178,7 +184,7 @@ void LocalDirWidget::setRootIndex(const QModelIndex &index)
 		dotdotDirToolButton->setEnabled(true);
         QString dir = node->filePath;
 		localDirTreeModel->setRootIndex(index);
-		localDirTreeView->resizeColumnToContents(0);
+		localDirTreeView->resizeColumnsToContents();
 		
         //*******************************
         // 这里的代码没有效果，不知为何
@@ -198,7 +204,7 @@ void LocalDirWidget::currentIndexChanged(const QString &text)
 /*    localDirComboTreeView->scrollTo(curIndex);*/
 
     localDirTreeModel->setRootPath(localDirFileSystemModel->filePath(curIndex));
-    localDirTreeView->resizeColumnToContents(0);
+    localDirTreeView->resizeColumnsToContents();
 }
 
 void LocalDirWidget::showContextMenu(const QModelIndex &index)
@@ -267,7 +273,7 @@ void LocalDirWidget::dotdot()
 {
 	localDirTreeModel->setRootPath(currentDirPath() + QDir::separator() + tr(".."));
 	localDirTreeView->reset();
-	localDirTreeView->resizeColumnToContents(0);
+	localDirTreeView->resizeColumnsToContents();
 	Node *dotdotNode = static_cast<Node*>(localDirTreeModel->index(0, 0).internalPointer());
 	dotdotDirToolButton->setEnabled(dotdotNode->fileName == tr(".."));
 }
@@ -328,7 +334,7 @@ void LocalDirWidget::reset()
 void LocalDirWidget::refresh()
 {
     localDirTreeModel->setRootPath(currentDirPath());
-    localDirTreeView->resizeColumnToContents(0);
+    localDirTreeView->resizeColumnsToContents();
 }
 
 void LocalDirWidget::newDir()

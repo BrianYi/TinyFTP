@@ -31,3 +31,10 @@ void LocalDirTreeView::contextMenuEvent(QContextMenuEvent *event)
     p->newDirAction->setEnabled(true);
     p->contextMenu->exec(QCursor::pos());
 }
+
+void LocalDirTreeView::resizeColumnsToContents()
+{
+    for (int i = 0; i < model()->columnCount(); i++) {
+        resizeColumnToContents(i);
+    }
+}

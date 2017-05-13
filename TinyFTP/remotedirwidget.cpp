@@ -16,14 +16,16 @@ RemoteDirWidget::RemoteDirWidget(QWidget *parent)
 	remoteDirTreeView = new RemoteDirTreeView(this);
     remoteDirTreeView->setModel(remoteDirTreeModel);
     remoteDirTreeView->header()->setStretchLastSection(true);   
-    remoteDirTreeView->resizeColumnToContents(0);
+    remoteDirTreeView->resizeColumnsToContents();
 	remoteDirTreeView->setAlternatingRowColors(true);
-	remoteDirTreeView->setSelectionMode(QAbstractItemView::SingleSelection);
+	remoteDirTreeView->setSelectionMode(QAbstractItemView::ContiguousSelection);
 	remoteDirTreeView->setSelectionBehavior(QAbstractItemView::SelectRows);
 	remoteDirTreeView->setSortingEnabled(true);
 	remoteDirTreeView->sortByColumn(0, Qt::AscendingOrder);
     remoteDirTreeView->setItemsExpandable(false);
     remoteDirTreeView->setRootIsDecorated(false);
+    remoteDirTreeView->setExpandsOnDoubleClick(false);
+    remoteDirTreeView->setEditTriggers(QAbstractItemView::SelectedClicked | QAbstractItemView::DoubleClicked);
 
 	remoteDirFileSystemModel = new QFileSystemModel(this);
 	remoteDirFileSystemModel->setFilter(QDir::AllDirs | QDir::Drives | 
@@ -577,7 +579,7 @@ void RemoteDirWidget::ftpDone(bool error)
 
 			remoteDirTreeView->setRootPath(currentListLocalDir);
 			//remoteDirTreeView->setModel(dirTreeModel);
-			remoteDirTreeView->resizeColumnToContents(0);
+			remoteDirTreeView->resizeColumnsToContents();
 			if (remoteDirTreeView->rowCount()) {
 				for (int row = 0; row < remoteDirTreeView->rowCount(); row++) {
 //                     QModelIndex index = remoteDirTreeModel->index(row, 1);

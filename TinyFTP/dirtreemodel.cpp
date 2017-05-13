@@ -43,7 +43,7 @@ QVariant DirTreeModel::data(const QModelIndex &index, int role /*= Qt::DisplayRo
     if (index.column() == 0) {
         if (role == Qt::DecorationRole) {
             return fileNode->fileIcon;
-        } else if (role == Qt::DisplayRole) {
+        } else if (role == Qt::DisplayRole || role == Qt::EditRole) {
             return fileNode->fileName;
         }
     } else if (index.column() == 1) {
@@ -88,22 +88,18 @@ QVariant DirTreeModel::data(const QModelIndex &index, int role /*= Qt::DisplayRo
     return QVariant();
 }
 
-// bool DirTreeModel::setData(const QModelIndex & index, const QVariant & value, int role /*= Qt::EditRole */)
-// {
-//     if (!index.isValid() || !rootNode || rootNode->children.isEmpty() || index.row() >= rootNode->children.count()) {
-//         return false;
-//     }
-// 
-//     Node *fileNode = static_cast<Node*>(index.internalPointer());
-//     if (index.column() == 1 && role == Qt::EditRole) {
-//         fileNode->fileSize = value.toLongLong();
-//         return true;
-//     } else if (index.column() == 3 && role == Qt::EditRole) {
-//         fileNode->modifyDate = value.toString();
-//         return true;
-//     }
-//     return false;
-// }
+bool DirTreeModel::setData(const QModelIndex & index, const QVariant & value, int role /*= Qt::EditRole */)
+{
+    if (!index.isValid() || !rootNode || rootNode->children.isEmpty() || index.row() >= rootNode->children.count()) {
+        return false;
+    }
+
+    Node *fileNode = static_cast<Node*>(index.internalPointer());
+    if (index.column() == 0) {
+        fileNode->fileName = value.toString();
+    }
+    return false;
+}
 
 QVariant DirTreeModel::headerData(int section, Qt::Orientation orientation, int role /*= Qt::DisplayRole*/) const
 {
@@ -249,7 +245,7 @@ void DirTreeModel::setRootIndex(const QModelIndex &index)
 
 QModelIndex DirTreeModel::index(int row, int column, const QModelIndex & parent /*= QModelIndex()*/) const
 {
-    if (!rootNode || rootNode->children.isEmpty() || row >= rootNode->children.count() || parent.column() > 0) {
+    if (!rootNode || rootNode->children.isEmpty() || row >= rootNode->children.count() || row < 0 || parent.column() > 0) {
         return QModelIndex();
     }
 
@@ -284,4 +280,15 @@ QModelIndex DirTreeModel::parent(const QModelIndex & index) const
 // 	int row = grandparentNode->children.indexOf(parentNode);
 //     return createIndex(row, 0, parentNode);
 	return QModelIndex();
+}
+
+Qt::ItemFlags DirTreeModel::flags(const QModelIndex &index) const
+{
+    if (!index.isValid())
+        return 0;
+    Node *n = static_cast<Node*>(index.internalPointer());
+    if (index.column() == 0 && n->fileName != tr("..")) {
+        return Qt::ItemIsEditable | QAbstractItemModel::flags(index);
+    }
+    return QAbstractItemModel::flags(index);
 }

@@ -82,3 +82,10 @@ Node* RemoteDirTreeView::item(int row, int column) const
         return 0;
     return static_cast<Node*>(d->index(row, column).internalPointer());
 }
+
+void RemoteDirTreeView::resizeColumnsToContents()
+{
+    for (int i = 0; i < model()->columnCount(); i++) {
+        resizeColumnToContents(i);
+    }
+}
