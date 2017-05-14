@@ -284,6 +284,10 @@ void RemoteDirWidget::closeEvent(QCloseEvent *event)
 
 void RemoteDirWidget::download()
 {
+    if (!isConnected()) {
+        reconnect();
+        return ;
+    }
 	currentCommand = CMD_DOWNLOAD;
 	Node *node = static_cast<Node*>(remoteDirTreeView->currentIndex().internalPointer());
 	QString path = currentFilePathUrl()/*url(node->filePath)*/;
@@ -326,6 +330,10 @@ void RemoteDirWidget::download()
 
 void RemoteDirWidget::upload(const QString &filePath)
 {
+    if (!isConnected()) {
+        reconnect();
+        return ;
+    }
     currentCommand = CMD_UPLOAD;
     QFileInfo fileInfo(filePath);
     currentUploadBaseDir = currentDirPathUrl();
@@ -458,9 +466,9 @@ void RemoteDirWidget::processDirectory()
 void RemoteDirWidget::listDirectoryFiles(const QString &dirName/* = ""*/)
 {
 	/*currentCommand = CMD_LIST;*/
-	if (!isConnected()) {
-		reconnect();
-	}
+// 	if (!isConnected()) {
+// 		reconnect();
+// 	}
 	setListing(true);
 	currentListDir = /*(dirUrl == "" ? QDir::separator() : dirUrl)*/dirName.isEmpty() ? currentDirPathUrl() :
         QDir::toNativeSeparators(QDir::cleanPath(currentDirPathUrl() + QDir::separator() + dirName));
@@ -804,6 +812,10 @@ void RemoteDirWidget::dotdot()
 //     remoteDirTreeView->setRootPath(currentDirPath() + QDir::separator() + tr(".."));
 // 	remoteDirTreeView->reset();
 // 	remoteDirTreeView->resizeColumnToContents(0);
+    if (!isConnected()) {
+        reconnect();
+        return ;
+    }
     listDirectoryFiles(tr(".."));
 	
 	if (currentDirPathUrl() == QDir::separator())
@@ -816,28 +828,44 @@ void RemoteDirWidget::dotdot()
 
 void RemoteDirWidget::queue()
 {
-
+    if (!isConnected()) {
+        reconnect();
+        return ;
+    }
 }
 
 void RemoteDirWidget::refresh()
 {
 	/*QString curDirPathUrl = currentDirPathUrl();*/
+    if (!isConnected()) {
+        reconnect();
+        return ;
+    }
 	listDirectoryFiles(/*curDirPathUrl*/);
 }
 
 void RemoteDirWidget::edit()
 {
-
+    if (!isConnected()) {
+        reconnect();
+        return ;
+    }
 }
 
 void RemoteDirWidget::read()
 {
-
+    if (!isConnected()) {
+        reconnect();
+        return ;
+    }
 }
 
 void RemoteDirWidget::changePermission()
 {
-
+    if (!isConnected()) {
+        reconnect();
+        return ;
+    }
 }
 
 void RemoteDirWidget::del()
@@ -863,6 +891,10 @@ void RemoteDirWidget::del()
 // 	} else {
 // 		ftpClient->remove(encoded(fileInfo.fileName()));
 // 	}
+    if (!isConnected()) {
+        reconnect();
+        return ;
+    }
     currentCommand = CMD_DEL;
     QString filePath = currentFilePath();
     QFileInfo fileInfo(filePath);
@@ -898,11 +930,18 @@ void RemoteDirWidget::del()
 
 void RemoteDirWidget::rename()
 {
-
+    if (!isConnected()) {
+        reconnect();
+        return ;
+    }
 }
 
 void RemoteDirWidget::newDir()
 {
+    if (!isConnected()) {
+        reconnect();
+        return ;
+    }
 	QString dirName = tr("新建文件夹");
 	QDir dir(currentDirPath());
 	if (!dir.exists(dirName)) {
@@ -926,7 +965,10 @@ succeed:
 
 void RemoteDirWidget::property()
 {
-
+    if (!isConnected()) {
+        reconnect();
+        return ;
+    }
 }
 
 void RemoteDirWidget::ftpCommandStarted(int)
@@ -1094,6 +1136,13 @@ void RemoteDirWidget::editingFinished(const QModelIndex &index)
     QString oldName = QFileInfo(n->filePath).fileName();
     currentOldFileName = "";
     currentNewFileName = "";
+
+    if (!isConnected()) {
+        n->fileName = oldName;
+        reconnect();
+        return ;
+    }
+
     if (oldName != n->fileName) {
         currentCommand = CMD_RENAME;
         currentOldFileName = currentDirPathUrl() + QDir::separator() + oldName;

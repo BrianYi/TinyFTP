@@ -24,7 +24,7 @@ void RemoteDirTreeView::contextMenuEvent(QContextMenuEvent *event)
 
     //*******************************
     // 当前未连接上或是有命令未执行完，则禁用所有选项
-    if (!p->isConnected() || p->ftpClient->hasPendingCommands()) {
+    if (/*!p->isConnected() || */p->ftpClient->hasPendingCommands()) {
         goto menuexec;
     }
 
