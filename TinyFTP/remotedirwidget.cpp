@@ -1054,7 +1054,7 @@ void RemoteDirWidget::ftpCommandFinished(int,bool error)
 // 			remoteDirComboBox->setModel(remoteDirFileSystemModel);
 // 			remoteDirComboBox->setView(remoteDirComboTreeView);
         } else {
-            writeLog(tr("连接失败(登录失败), 用户名或密码错误!")/* + ftpClient->errorString()*/);
+            writeLog(tr("连接失败(登录失败), 用户名或密码错误!(%1)").arg(ftpClient->errorString()));
 			if (isConnected()) {
                 disconnect();
 			}
@@ -1069,7 +1069,7 @@ void RemoteDirWidget::ftpCommandFinished(int,bool error)
             connectButton->setText(tr("连接"));
             connectButton->setEnabled(true);
         } else {
-            writeLog(tr("无法断开连接, ") + ftpClient->errorString());
+            writeLog(tr("无法断开连接(%1)").arg(ftpClient->errorString()));
         }
     } else if (command == QFtp::List) {
     } else if (command == QFtp::Cd) {
