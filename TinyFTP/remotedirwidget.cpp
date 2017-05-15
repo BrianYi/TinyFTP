@@ -501,7 +501,7 @@ void RemoteDirWidget::ftpListInfo(const QUrlInfo &urlInfo)
                 }
             }
             //}
-		} else if (urlInfo.isDir() && !urlInfo.isSymLink() && urlInfo.name() != tr(".")) {
+		} else if (urlInfo.isDir() && !urlInfo.isSymLink() && urlInfo.name() != tr(".") && urlInfo.name() != tr("..")) {
 			//pendingDirs.append(currentDir + "/" + urlInfo.name());
 			/*filesModifyDate.append(urlInfo.lastModified().toString("yyyy/MM/dd hh:mm"));*/
 
@@ -1038,6 +1038,8 @@ void RemoteDirWidget::ftpCommandFinished(int,bool error)
 // 				path = QDir::separator();
 // 			}
             cacheDir = tr("cache") + QDir::separator() + urlAddress.host();
+			delete remoteDirTreeView->model();
+			remoteDirTreeView->setModel(new DirTreeModel(this));
 			listDirectoryFiles(path);
 
 			connectButton->setText(tr("¶Ï¿ª"));
@@ -1128,8 +1130,8 @@ void RemoteDirWidget::disconnect()
 {
     if (isConnected()) {
         ftpClient->close();
-//         DirTreeModel *dirTreeModel = static_cast<DirTreeModel*>(remoteDirTreeView->model());
-//         delete dirTreeModel;
+//         delete remoteDirTreeView->model();
+// 		remoteDirTreeView->setModel(new DirTreeModel(this));
     }
 }
 
