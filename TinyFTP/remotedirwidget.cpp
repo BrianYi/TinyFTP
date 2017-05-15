@@ -501,11 +501,15 @@ void RemoteDirWidget::ftpListInfo(const QUrlInfo &urlInfo)
                 }
             }
             //}
-		} else if (urlInfo.isDir() && !urlInfo.isSymLink()) {
+		} else if (urlInfo.isDir() && !urlInfo.isSymLink() && urlInfo.name() != tr(".")) {
 			//pendingDirs.append(currentDir + "/" + urlInfo.name());
 			/*filesModifyDate.append(urlInfo.lastModified().toString("yyyy/MM/dd hh:mm"));*/
+
 			QString localDir = currentListLocalDir + QDir::separator() + decoded(urlInfo.name());
-			QDir(".").mkpath(localDir);
+			if (QDir().exists(localDir)) {
+				delDir(localDir);
+			}
+			QDir().mkpath(localDir);
 		}
         if (filesInfoMap.count(decoded(urlInfo.name()))) {
             writeLog(tr("Error: filesInfoMap has the same key: %1").arg(decoded(urlInfo.name())));
