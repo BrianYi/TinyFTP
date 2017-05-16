@@ -30,7 +30,7 @@ void RemoteDirTreeView::contextMenuEvent(QContextMenuEvent *event)
 
     //*******************************
     // 处理上下文菜单
-    if (p->currentDirPathUrl() == QDir::separator()) {
+    if (p->currentDirPathUrl() == tr("/")) {
         p->dotdotAction->setEnabled(false);
     } else {
         DirTreeModel *r = static_cast<DirTreeModel*>(p->remoteDirTreeView->model());

@@ -164,11 +164,6 @@ void TinyFTP::connectToFTPServer()
     QString address = trimUrl(addressComboBox->currentText());
     QString username = userNameComboBox->currentText();
     QString password = passwordLineEdit->text();
-	if (userNameComboBox->findText(username) == -1) {
-		userNameComboBox->addItem(username);
-	}
-	userNamePasswordMap[username] = password;
-
     if (addressComboBox->findText(address) == -1) {
         addressComboBox->addItem(address);
         addressList.append(address);
@@ -177,9 +172,14 @@ void TinyFTP::connectToFTPServer()
 
     RemoteDirWidget *remoteDirWidget = qobject_cast<RemoteDirWidget*>(remoteDirTabWidget->currentWidget());
     if (anonymousCheckBox->isChecked()) {
-        username = tr("");
-        password = tr("");
-    }
+        username = QString();
+        password = QString();
+    } else {
+		if (userNameComboBox->findText(username) == -1) {
+			userNameComboBox->addItem(username);
+		}
+		userNamePasswordMap[username] = password;
+	}
     remoteDirTabWidget->setTabText(remoteDirTabWidget->currentIndex(), address);
     remoteDirWidget->connectToHost(address, port, username, password);
 	/*remoteDirWidget->setEnabled(true);*/
@@ -253,8 +253,8 @@ void TinyFTP::currentUsernameChanged(const QString &text)
 
 QString TinyFTP::trimUrl(const QString &url)
 {
-    QString u = QDir::toNativeSeparators(url);
-    QString t = tr("ftp:%1%2").arg(QDir::separator()).arg(QDir::separator());
+    QString u = QDir::fromNativeSeparators(url);
+    QString t = tr("ftp://");
     if (u.startsWith(t)) {
         u = u.mid(t.length());
     }

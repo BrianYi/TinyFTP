@@ -272,7 +272,7 @@ void LocalDirWidget::showContextMenu(const QModelIndex &index)
 
 void LocalDirWidget::dotdot()
 {
-	localDirTreeModel->setRootPath(currentDirPath() + QDir::separator() + tr(".."));
+	localDirTreeModel->setRootPath(currentDirPath() + tr("/") + tr(".."));
 	localDirTreeView->reset();
 	localDirTreeView->resizeColumnsToContents();
 	Node *dotdotNode = static_cast<Node*>(localDirTreeModel->index(0, 0).internalPointer());
@@ -364,6 +364,6 @@ void LocalDirWidget::editingFinished(const QModelIndex &index)
     QFile file(n->filePath);
     if (QFileInfo(n->filePath).fileName() != n->fileName) {
         file.rename(n->fileName);
-        n->filePath = n->dirPath + QDir::separator() + n->fileName;
+        n->filePath = n->dirPath + tr("/") + n->fileName;
     }
 }

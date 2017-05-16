@@ -141,8 +141,8 @@ void DirTreeModel::setRootPath(const QString path)
 		rootNode->isDir = fileInfo.isDir();
 		rootNode->isSystemLink = fileInfo.isSymLink();
 		rootNode->isFile = fileInfo.isFile();
-		rootNode->dirPath = QDir::toNativeSeparators(fileInfo.absolutePath());
-		rootNode->filePath = QDir::toNativeSeparators(fileInfo.absoluteFilePath());
+		rootNode->dirPath = QDir::fromNativeSeparators(fileInfo.absolutePath());
+		rootNode->filePath = QDir::fromNativeSeparators(fileInfo.absoluteFilePath());
 	}
 
     foreach(QFileInfo fileInfo, rootPath.entryInfoList(QDir::NoDot | QDir::AllEntries, 
@@ -156,8 +156,8 @@ void DirTreeModel::setRootPath(const QString path)
             p->isDir = fileInfo.isDir();
             p->isSystemLink = fileInfo.isSymLink();
             p->isFile = fileInfo.isFile();
-			p->dirPath = QDir::toNativeSeparators(fileInfo.absolutePath());
-			p->filePath = QDir::toNativeSeparators(fileInfo.absoluteFilePath());
+			p->dirPath = QDir::fromNativeSeparators(fileInfo.absolutePath());
+			p->filePath = QDir::fromNativeSeparators(fileInfo.absoluteFilePath());
         /*files.append(QPair<QFileInfo, qint64>(fileInfo, fileInfo.size()));*/
             rootNode->children.append(p);
     }
