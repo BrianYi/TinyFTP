@@ -46,7 +46,6 @@ TinyFTP::TinyFTP(QWidget *parent)
     userInfoToolBar->addSeparator();
 	userInfoToolBar->addWidget(anonymousCheckBox);
 	userInfoToolBar->setAllowedAreas(Qt::TopToolBarArea | Qt::BottomToolBarArea);
-	//addToolBarBreak();
 
     QSplitter *hSplitter = new QSplitter(Qt::Horizontal, this);
     hSplitter->addWidget(addressLabel);
@@ -65,14 +64,10 @@ TinyFTP::TinyFTP(QWidget *parent)
 	remoteDirTabWidget->setEnableMutiTab(true);
     remoteDirTabWidget->addTab(new RemoteDirWidget(this), tr(" "));
 
-	/*remoteDirTabWidget->currentWidget()->setEnabled(false);*/
-
 	ftpStatusBar = statusBar();
 
 	splitter->addWidget(localDirTabWidget);
 	splitter->addWidget(remoteDirTabWidget);
-//     splitter->setStretchFactor(0, 1);
-// 	splitter->setStretchFactor(1, 1);
 	setCentralWidget(splitter);
 
 	readSettings();
@@ -86,13 +81,8 @@ TinyFTP::TinyFTP(QWidget *parent)
 
 	userNameComboBox->addItems(userNamePasswordMap.keys());
     addressComboBox->addItems(addressList);
-	//userNameComboBox->setCurrentIndex(0);
 
 	setWindowTitle(tr("TinyFTP"));
-
-    
-// 	connect(remoteDirTabWidget->currentWidget(), SIGNAL(ftpCommandDone(QFtp::Command, bool)), 
-// 		this, SLOT(ftpCommandDone(QFtp::Command, bool)));
 }
 
 TinyFTP::~TinyFTP()
@@ -113,26 +103,17 @@ LocalDirWidget * TinyFTP::localCurrentWidget() const
 void TinyFTP::writeSettings()
 {
 	QSettings settings(tr("MyQt4Projects"), tr("TinyFTP"));
-    //settings.beginGroup("TinyFTP");
 	settings.setValue("geometry", saveGeometry());
 	QStringList usrnameList = userNamePasswordMap.keys();
 	QStringList passwdList = userNamePasswordMap.values();
 	settings.setValue("username", usrnameList);
 	settings.setValue("password", passwdList);
     settings.setValue("addressList", addressList);
-//     settings.endGroup();
-//     settings.beginGroup("localDirTabWidget");
-//     settings.setValue("geometry", localDirTabWidget->saveGeometry());
-//     settings.endGroup();
-//     settings.beginGroup("remoteDirTabWidget");
-//     settings.setValue("geometry", remoteDirTabWidget->saveGeometry());
-//     settings.endGroup();
 }
 
 void TinyFTP::readSettings()
 {
 	QSettings settings(tr("MyQt4Projects"), tr("TinyFTP"));
-    //settings.beginGroup("TinyFTP");
     restoreGeometry(settings.value("geometry").toByteArray());
 	QStringList usrnameList = settings.value("username").toStringList();
 	QStringList passwdList = settings.value("password").toStringList();
@@ -140,13 +121,6 @@ void TinyFTP::readSettings()
 		userNamePasswordMap[usrnameList[i]] = passwdList[i];
 	}
     addressList = settings.value("addressList").toStringList();
-//     settings.endGroup();
-//     settings.beginGroup("localDirTabWidget");
-//     localDirTabWidget->restoreGeometry(settings.value("geometry").toByteArray());
-//     settings.endGroup();
-//     settings.beginGroup("remoteDirTabWidget");
-//     remoteDirTabWidget->restoreGeometry(settings.value("geometry").toByteArray());
-//     settings.endGroup();
 }
 
 void TinyFTP::closeEvent(QCloseEvent *event)
@@ -182,7 +156,6 @@ void TinyFTP::connectToFTPServer()
 	}
     remoteDirTabWidget->setTabText(remoteDirTabWidget->currentIndex(), address);
     remoteDirWidget->connectToHost(address, port, username, password);
-	/*remoteDirWidget->setEnabled(true);*/
 }
 
 void TinyFTP::ftpCommandDone(QFtp::Command command, bool error)
@@ -190,17 +163,12 @@ void TinyFTP::ftpCommandDone(QFtp::Command command, bool error)
 	RemoteDirWidget *remoteDirWidget = static_cast<RemoteDirWidget*>(sender());
 	if (command == QFtp::ConnectToHost) {
 		if (!error) {
-// 			remoteDirTabWidget->setTabText(remoteDirTabWidget->currentIndex(), 
-// 				addressComboBox->currentText());
 		} else {
-			/*remoteDirWidget->setEnabled(false);*/
 		}
 	} else if (command == QFtp::Login) {
 		if (!error) {
-			/*remoteDirWidget->setEnabled(true);*/
 		} 
 		else {
-			/*remoteDirWidget->setEnabled(false);*/
 		}
 	} else if (command == QFtp::Close) {
 	} else if (command == QFtp::List) {
@@ -216,20 +184,6 @@ void TinyFTP::ftpCommandDone(QFtp::Command command, bool error)
 
 bool TinyFTP::okToConnectToFTPServer()
 {
-//     if (!anonymousCheckBox->isChecked()) {
-//         if (userNameLineEdit->text().isEmpty() ||
-//             passwordLineEdit->text().isEmpty()) {
-//                 ftpStatusBar->showMessage(tr("[*]用户名或密码不能为空!"));
-//                 return false;
-//         }
-//     }
-// 
-//     if (portLineEdit->text().isEmpty() || 
-//         addressComboBox->currentText().isEmpty()) {
-//             ftpStatusBar->showMessage(tr("[*]端口号或地址不能为空!"));            
-//             return false;
-//     }
-
     return true;
 }
 

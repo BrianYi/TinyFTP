@@ -18,13 +18,6 @@ int DirTreeModel::rowCount(const QModelIndex &parent /*= QModelIndex()*/) const
 	if (!rootNode || parent.column() > 0) {
 		return 0;
 	}
-// 	if (!parent.isValid()) {
-// 		return rootNode->children.count();
-// 	}
-// 	Node *parentNode = static_cast<Node*>(parent.internalPointer());
-// 	if (!parentNode) {
-// 		return 0;
-// 	}
     return rootNode->children.count();
 }
 
@@ -158,7 +151,6 @@ void DirTreeModel::setRootPath(const QString path)
             p->isFile = fileInfo.isFile();
 			p->dirPath = QDir::fromNativeSeparators(fileInfo.absolutePath());
 			p->filePath = QDir::fromNativeSeparators(fileInfo.absoluteFilePath());
-        /*files.append(QPair<QFileInfo, qint64>(fileInfo, fileInfo.size()));*/
             rootNode->children.append(p);
     }
 	sort(0, Qt::AscendingOrder);
@@ -229,7 +221,6 @@ QString DirTreeModel::currentDirPath() const
 	}
 	return (rootNode->isDir ? 
 		rootNode->filePath : rootNode->dirPath );
-	/*return rootNode->dirPath;*/
 }
 
 void DirTreeModel::setRootIndex(const QModelIndex &index)
@@ -256,30 +247,11 @@ QModelIndex DirTreeModel::index(int row, int column, const QModelIndex & parent 
     } else {
         return QModelIndex();
     }
-//     QModelIndex child = parent.child(row, column);
-//     if (child.isValid()) {
-//         return child;
-//     }
     return createIndex(row, column, childNode);
 }
 
 QModelIndex DirTreeModel::parent(const QModelIndex & index) const
 {
-// 	if (!index.isValid() || index.column() > 0) {
-// 		return QModelIndex();
-// 	}
-// 
-// 	Node *node = static_cast<Node*>(index.internalPointer());
-// 	Node *parentNode = node->parent;
-// 	if (!parentNode) {
-// 		return QModelIndex();
-// 	}
-// 	Node *grandparentNode = parentNode->parent;
-// 	if (!grandparentNode) {
-// 		return QModelIndex();
-// 	}
-// 	int row = grandparentNode->children.indexOf(parentNode);
-//     return createIndex(row, 0, parentNode);
 	return QModelIndex();
 }
 

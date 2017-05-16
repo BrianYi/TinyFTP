@@ -27,10 +27,6 @@ LocalDirWidget::LocalDirWidget(QWidget *parent)
     localDirTreeView->setRootIsDecorated(false);
     localDirTreeView->setExpandsOnDoubleClick(false);
     localDirTreeView->setEditTriggers(QAbstractItemView::SelectedClicked | QAbstractItemView::DoubleClicked);
-    
-    /*localDirTreeView->setItemsExpandable(fqalse);*/
-
-    //localDirTreeView->setEditTriggers(QAbstractItemView::DoubleClicked);
 
 	localDirFileSystemModel = new QFileSystemModel(this);
 	localDirFileSystemModel->setFilter(QDir::AllDirs | QDir::Drives | 
@@ -151,28 +147,6 @@ QString LocalDirWidget::currentFilePath() const
 	return node->filePath;
 }
 
-// void LocalDirWidget::contextMenuEvent(QContextMenuEvent *event)
-// {
-// 	QModelIndex index = localDirTreeView->indexAt(QCursor::pos());
-// 	Node *node = static_cast<Node*>(index.internalPointer());
-// 	if (!index.isValid()) {
-// 		return ;
-// 	}
-// 	//*******************************
-// 	// tasks:
-// 	//	1. 上传
-// 	//	2. 队列
-// 	//	3. 发送到（QMenu）
-// 	//	4. 编辑
-// 	//	5. 查看
-// 	//	6. 移动
-// 	//	7. 执行
-// 	//	8. 删除
-// 	//	9. 重命名
-// 	//	10. 属性
-// 	contextMenu->exec(QCursor::pos());
-// }
-
 void LocalDirWidget::setRootIndex(const QModelIndex &index)
 {
 	if (!index.isValid()) {
@@ -202,7 +176,6 @@ void LocalDirWidget::currentIndexChanged(const QString &text)
     localDirComboTreeView->collapseAll();
     localDirComboTreeView->expand(curIndex);
     localDirComboTreeView->reset();
-/*    localDirComboTreeView->scrollTo(curIndex);*/
 
     localDirTreeModel->setRootPath(localDirFileSystemModel->filePath(curIndex));
     localDirTreeView->resizeColumnsToContents();
@@ -227,7 +200,6 @@ void LocalDirWidget::showContextMenu(const QModelIndex &index)
 			if (w->isConnected()) {
 				QAction *action = new QAction(remoteDirTabWidget->tabText(i), this);
 				sendToAction->menu()->addAction(action);
-				/*connect(action, SIGNAL(triggered()), this, SLOT(uploadFile()));*/
 			}
 		}
 
