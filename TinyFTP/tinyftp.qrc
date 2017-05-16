@@ -1,4 +1,5 @@
 <RCC>
-    <qresource prefix="TinyFTP">
+    <qresource prefix="/">
+        <file>tinyftp.qss</file>
     </qresource>
 </RCC>
