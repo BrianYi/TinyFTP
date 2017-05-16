@@ -393,7 +393,6 @@ void RemoteDirWidget::listDirectoryFiles(const QString &dirName/* = ""*/)
     delDir(currentListLocalDir);
 	QDir().mkpath(currentListLocalDir);
 	ftpClient->list(encoded(currentListDir));
-
 }
 
 void RemoteDirWidget::ftpListInfo(const QUrlInfo &urlInfo)
@@ -829,6 +828,10 @@ void RemoteDirWidget::ftpCommandFinished(int,bool error)
             writeLog(tr("连接成功(登录成功)"));
 			QString path = urlAddress.path();
             cacheDir = tr("cache") + tr("/") + urlAddress.host();
+			QDir().mkdir(tr("cache"));
+#if 1
+			SetFileAttributesA("cache", FILE_ATTRIBUTE_HIDDEN);
+#endif
 			delete remoteDirTreeView->model();
 			remoteDirTreeView->setModel(new DirTreeModel(this));
 			listDirectoryFiles(path);
