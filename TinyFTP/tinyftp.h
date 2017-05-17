@@ -8,6 +8,7 @@
 class RemoteDirWidget;
 class LocalDirWidget;
 class TabWidget;
+class QueueWidget;
 class TinyFTP : public QMainWindow
 {
 	Q_OBJECT
@@ -45,11 +46,13 @@ private:
 	QLabel *addressLabel;
 	QComboBox *addressComboBox;
 	QPushButton *goPushButton;
-	QSplitter *splitter;
+	QSplitter *hSplitter;
+	/*QSplitter *vSplitter;*/
 	QStatusBar *ftpStatusBar;
 	QMap<QString, QString> userNamePasswordMap;
 	/*QStringList userNameList;*/
     QStringList addressList;
+	QueueWidget *queueWidget;
 };
 
 #endif // TINYFTP_H

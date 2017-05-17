@@ -3,11 +3,13 @@
 #include "tabwidget.h"
 #include "localdirwidget.h"
 #include "remotedirwidget.h"
+#include "queuewidget.h"
 
 TinyFTP::TinyFTP(QWidget *parent)
 	: QMainWindow(parent)
 {
-	splitter = new QSplitter(Qt::Horizontal, this);
+	hSplitter = new QSplitter(Qt::Horizontal, this);
+	/*vSplitter = new QSplitter(Qt::Vertical, this);*/
 	
 	userNameLabel = new QLabel(tr("用户:"), this);
 	userNameComboBox = new QComboBox(this);
@@ -47,13 +49,13 @@ TinyFTP::TinyFTP(QWidget *parent)
 	userInfoToolBar->addWidget(anonymousCheckBox);
 	userInfoToolBar->setAllowedAreas(Qt::TopToolBarArea | Qt::BottomToolBarArea);
 
-    QSplitter *hSplitter = new QSplitter(Qt::Horizontal, this);
-    hSplitter->addWidget(addressLabel);
-    hSplitter->addWidget(addressComboBox);
-    hSplitter->addWidget(goPushButton);
-    hSplitter->setStretchFactor(1,1);
+    QSplitter *splitter = new QSplitter(Qt::Horizontal, this);
+    splitter->addWidget(addressLabel);
+    splitter->addWidget(addressComboBox);
+    splitter->addWidget(goPushButton);
+    splitter->setStretchFactor(1,1);
 	QToolBar *addressInfoToolBar = addToolBar(tr("地址信息"));
-    addressInfoToolBar->addWidget(hSplitter);
+    addressInfoToolBar->addWidget(splitter);
 	addressInfoToolBar->setAllowedAreas(Qt::TopToolBarArea | Qt::BottomToolBarArea);
 
 	localDirTabWidget = new TabWidget(this);
@@ -66,9 +68,17 @@ TinyFTP::TinyFTP(QWidget *parent)
 
 	ftpStatusBar = statusBar();
 
-	splitter->addWidget(localDirTabWidget);
-	splitter->addWidget(remoteDirTabWidget);
-	setCentralWidget(splitter);
+	queueWidget = new QueueWidget(tr("队列"), this);
+	
+	/*queueWidget->setFloatable(false);*/
+	//addToolBar(Qt::BottomToolBarArea, queueWidget);
+	addDockWidget(Qt::BottomDockWidgetArea, queueWidget);
+
+	hSplitter->addWidget(localDirTabWidget);
+	hSplitter->addWidget(remoteDirTabWidget);
+// 	vSplitter->addWidget(hSplitter);
+// 	vSplitter->addWidget(queueWidget);
+	setCentralWidget(hSplitter);
 
 	readSettings();
 
