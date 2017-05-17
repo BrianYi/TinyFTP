@@ -1,9 +1,9 @@
 # TODO list
 TODO list is used to plan tasks we will do.
-* Tasks formats should always be **data first**
+* Tasks formats should always be **date first**
 * Then the jobs temporarily should have be done
 -------------------------------------------------
-**Data: 2017/5/17**
+**Date: 2017/5/17**
 ## Functionality
 * **queue** should be added in the program, when big file is downloading, queue is the key to realize mutitasking
 * a **complete menu**, in which the function it may or not be implemented, but should be a beacon to tell us what we should to do for the next step
