@@ -2,6 +2,7 @@
 TODO list is used to plan tasks we will do.
 * Tasks formats should always be **data first**
 * Then the jobs temporarily should have be done
+-------------------------------------------------
 **Data: 2017/5/17**
 ## Functionality
 * **queue** should be added to the program, when big file is downloading, queue is the key to realize mutitasking
