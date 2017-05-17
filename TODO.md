@@ -5,7 +5,7 @@ TODO list is used to plan tasks we will do.
 -------------------------------------------------
 **Data: 2017/5/17**
 ## Functionality
-* **queue** should be added to the program, when big file is downloading, queue is the key to realize mutitasking
+* **queue** should be added in the program, when big file is downloading, queue is the key to realize mutitasking
 * a **complete menu**, in which the function it may or not be implemented, but should be a beacon to tell us what should we to do for next step
 * Qt's **what's this** feature need to be added in the program
 ## UI design
