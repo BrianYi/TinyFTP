@@ -30,8 +30,6 @@ public:
     };
 	RemoteDirWidget(QWidget *parent);
 	~RemoteDirWidget();
-//     void setLoginInfo(const QString &port, const QString &address, 
-//         const QString &usrname = QString(), const QString &pwd = QString());
     void connectToHost(const QString &address, const QString &port, const QString &usrname = QString(), 
         const QString &pwd = QString());
 	bool isConnected() const;

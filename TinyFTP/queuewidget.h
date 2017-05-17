@@ -14,6 +14,7 @@ public:
 private:
 	QTabWidget *tabWidget;
 	QTreeWidget *queueTreeWidget;
+    
 };
 
 #endif // QUEUEWIDGET_H
