@@ -7,7 +7,6 @@
 FTPClient::FTPClient(QObject *parent)
 	: QFtp(parent)
 {
-	parentTinyFtp = static_cast<TinyFTP*>(parent);
 	connect(this, SIGNAL(listInfo(const QUrlInfo &urlInfo)), this, SLOT(ftpListInfo(const QUrlInfo &urlInfo)));
 	connect(this, SIGNAL(done(bool)), this, SLOT(ftpDone(bool)));
 }
@@ -27,8 +26,8 @@ void FTPClient::sendMsg(const QString &msg)
 	emit ftpMsg(msg);
 }
 
-void FTPClient::download(const QString &remoteDirPathUrl, const QString &localDirPath,
-	const QString &fileName, const bool &isDir
+void FTPClient::download(const QString remoteDirPathUrl, const QString localDirPath,
+	const QString fileName, const bool isDir
 	)
 {
 	currentCommand = CMD_DOWNLOAD;
@@ -59,7 +58,7 @@ void FTPClient::download(const QString &remoteDirPathUrl, const QString &localDi
 	}
 }
 
-void FTPClient::upload(const QString &remoteDirPathUrl, const QString &filePath)
+void FTPClient::upload(const QString remoteDirPathUrl, const QString filePath)
 {
 	currentCommand = CMD_UPLOAD;
 	QFileInfo fileInfo(filePath);

@@ -249,15 +249,16 @@ void RemoteDirWidget::download()
 // 	currentDownloadBaseDir = /*path.left(lstIdx);*/currentDirPathUrl();
 // 	currentDownloadRelativeDir = /*path.mid(lstIdx);*/tr("/") + node->fileName;
 	
-	Task task;
-	task.type = taskType_Download;
-	task.icon = node->fileIcon;
-	task.fileName = node->fileName;
-	task.fileSize = node->fileSize;
-	task.downloadRemoteDirPathUrl = currentDirPathUrl();
-	task.downloadLocalDirPath = parentTinyFtp->localCurrentWidget()->currentDirPath();
-	task.state = taskState_Pending;
-	task.urlAddress = urlAddress;
+	Task *task = new Task(this);
+	task->type = taskType_Download;
+	task->icon = node->fileIcon;
+	task->fileName = node->fileName;
+    task->isDir = node->isDir;
+	task->fileSize = node->fileSize;
+	task->downloadRemoteDirPathUrl = currentDirPathUrl();
+	task->downloadLocalDirPath = parentTinyFtp->localCurrentWidget()->currentDirPath();
+	task->state = taskState_Pending;
+	task->urlAddress = urlAddress;
 	parentTinyFtp->queueWidget->addTask(task);
 
 	// 1. 文件直接下载
@@ -291,15 +292,16 @@ void RemoteDirWidget::upload(const QString &filePath)
     }
 
 	QFileInfo fileInfo(filePath);
-	Task task;
-	task.type = taskType_Upload;
-	task.icon = provider.icon(fileInfo);
-	task.fileName = fileInfo.fileName();
-	task.fileSize = fileInfo.size();
-	task.uploadRemoteDirPathUrl = currentDirPathUrl();
-	task.uploadLocalDirPath = fileInfo.absolutePath();
-	task.state = taskState_Pending;
-	task.urlAddress = urlAddress;
+	Task *task = new Task(this);
+	task->type = taskType_Upload;
+	task->icon = provider.icon(fileInfo);
+	task->fileName = fileInfo.fileName();
+    task->isDir = fileInfo.isDir();
+	task->fileSize = fileInfo.size();
+	task->uploadRemoteDirPathUrl = currentDirPathUrl();
+	task->uploadLocalDirPath = fileInfo.absolutePath();
+	task->state = taskState_Pending;
+	task->urlAddress = urlAddress;
 	parentTinyFtp->queueWidget->addTask(task);
 
 //     currentCommand = CMD_UPLOAD;

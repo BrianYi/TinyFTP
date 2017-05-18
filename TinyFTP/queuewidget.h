@@ -11,6 +11,7 @@ class Task;
 class FTPClient;
 class TaskThread;
 class TinyFTP;
+class RemoteDirWidget;
 class QueueDelegate : public QItemDelegate
 {
 	Q_OBJECT
@@ -28,7 +29,7 @@ class QueueWidget : public QDockWidget
 public:
 	QueueWidget(const QString & title, QWidget * parent = 0);
 	~QueueWidget();
-	void addTask(const Task &task);
+	void addTask(Task *task);
 private:
 	QTabWidget *tabWidget;
 	QTreeWidget *queueTreeWidget;
@@ -42,13 +43,13 @@ class TaskThread : public QThread
 public:
 	TaskThread(QObject *parent = 0);
 	~TaskThread();
-	void addTask(const Task &task);
+	void addTask(Task *task);
 	void run();
 	void stop();
 	bool isRunning();
 private:
 	FTPClient *idleFtpClient();
-	QQueue<Task> tasksQueue;
+	QQueue<Task*> tasksQueue;
 	QList<FTPClient*> ftpClients;
 	QMutex tasksQueueMutex;
 	QMutex ftpClientsMutex;
@@ -59,12 +60,14 @@ private:
 class Task
 {
 public:
-	Task();
+	Task(QWidget *parent = 0);
 	QString taskName() const;
 	qint64 taskId() const;
+    QWidget *parent();  // RemoteDirWidget
     TaskType type;
     QIcon icon;
     QString fileName;
+    bool isDir;
     qint64 fileSize;
     TaskState state;
     QUrl urlAddress;
@@ -73,6 +76,7 @@ public:
 	QString uploadRemoteDirPathUrl;
 	QString uploadLocalDirPath;
 private:
+    QWidget *parentWidget;
 	QString objName;
 	qint64 objId;
 	static qint64 id;

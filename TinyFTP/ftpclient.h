@@ -14,10 +14,10 @@ public:
 	FTPClient(QObject *parent = 0);
 	~FTPClient();
 	bool idle();
-	void sendMsg(const QString &msg);
-	void download(const QString &remoteDirUrl, const QString &localDir,
-		const QString &fileName, const bool &isDir);
-	void upload(const QString &remoteDirPathUrl, const QString &filePath);
+    void sendMsg(const QString &msg);
+	void download(const QString remoteDirUrl, const QString localDir,
+		const QString fileName, const bool isDir);
+	void upload(const QString remoteDirPathUrl, const QString filePath);
 signals:
 	void ftpMsg(const QString &msg);
 	private slots:

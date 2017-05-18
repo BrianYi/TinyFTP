@@ -30,6 +30,8 @@ public:
 	void reset();
     void reconnect();  
     void disconnect();
+    public slots:
+        void writeLog(const QString &logData);
 protected:
 	void closeEvent(QCloseEvent *event);
 	private slots:
@@ -61,7 +63,6 @@ signals:
 private:
 	bool listing() const;
 	void setListing(bool isDoing);
-	void writeLog(const QString &logData);
     void listDirectoryFiles(const QString &dirName = "");
 	/*void download(const QString &path);*/
 	void processDirectory();
