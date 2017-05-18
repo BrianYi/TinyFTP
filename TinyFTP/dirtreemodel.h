@@ -3,44 +3,12 @@
 
 #include <QAbstractItemModel>
 #include <QtGui>
-
-struct Node 
-{
-	Node()
-	{
-		isDir = false;
-		isSystemLink = false;
-		isFile = false;
-	}
-    ~Node()
-    {
-        if (!children.isEmpty()) {
-            qDeleteAll(children);
-        }
-    }
-    QString fileName;
-    QIcon   fileIcon;
-    qint64  fileSize;
-    QString fileType;
-    QString modifyDate;
-    QString dirPath;
-	QString filePath;
-    bool isDir;
-    bool isSystemLink;
-    bool isFile;
-    QList<Node*> children;
-};
+#include "common.h"
 
 class DirTreeModel : public QAbstractItemModel
 {
     Q_OBJECT
 public:
-	enum {
-		Byte,
-		KiloByte,
-		MegaByte,
-		GigaByte
-	};
     DirTreeModel(QObject *parent = 0);
     ~DirTreeModel();
 

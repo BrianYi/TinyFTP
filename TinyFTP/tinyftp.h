@@ -9,12 +9,14 @@ class RemoteDirWidget;
 class LocalDirWidget;
 class TabWidget;
 class QueueWidget;
+class FTPClient;
 class TinyFTP : public QMainWindow
 {
 	Q_OBJECT
 public:
 	friend LocalDirWidget;
 	friend RemoteDirWidget;
+	friend FTPClient;
 public:
 	TinyFTP(QWidget *parent = 0);
     ~TinyFTP();

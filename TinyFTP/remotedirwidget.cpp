@@ -1,9 +1,9 @@
-#include "common.h"
 #include "remotedirwidget.h"
 #include "localdirwidget.h"
 #include "tinyftp.h"
 #include "dirtreemodel.h"
 #include "remotedirtreeview.h"
+#include "queuewidget.h"
 
 RemoteDirWidget::RemoteDirWidget(QWidget *parent)
 	: QWidget(parent)
@@ -242,34 +242,45 @@ void RemoteDirWidget::download()
         reconnect();
         return ;
     }
-	currentCommand = CMD_DOWNLOAD;
-	Node *node = static_cast<Node*>(remoteDirTreeView->currentIndex().internalPointer());
-	QString path = currentFilePathUrl();
-	int lstIdx = path.lastIndexOf(tr("/"));
-	currentDownloadBaseDir = path.left(lstIdx);
-	currentDownloadRelativeDir = path.mid(lstIdx);
+// 	currentCommand = CMD_DOWNLOAD;
+ 	Node *node = static_cast<Node*>(remoteDirTreeView->currentIndex().internalPointer());
+// // 	QString path = currentFilePathUrl();
+// // 	int lstIdx = path.lastIndexOf(tr("/"));
+// 	currentDownloadBaseDir = /*path.left(lstIdx);*/currentDirPathUrl();
+// 	currentDownloadRelativeDir = /*path.mid(lstIdx);*/tr("/") + node->fileName;
+	
+	Task task;
+	task.type = taskType_Download;
+	task.icon = node->fileIcon;
+	task.fileName = node->fileName;
+	task.fileSize = node->fileSize;
+	task.downloadRemoteDirPathUrl = currentDirPathUrl();
+	task.downloadLocalDirPath = parentTinyFtp->localCurrentWidget()->currentDirPath();
+	task.state = taskState_Pending;
+	task.urlAddress = urlAddress;
+	parentTinyFtp->queueWidget->addTask(task);
 
 	// 1. 文件直接下载
 	// 2. 目录递归下载
-	if (node->isDir) {
-		pendingDownloadRelativeDirs.append(currentDownloadRelativeDir);
-		processDirectory();
-	} else {
-		LocalDirWidget *l = parentTinyFtp->localCurrentWidget();
-		currentDownloadLocalDir = l->currentDirPath();
-
-		QFile *file = new QFile(currentDownloadLocalDir + tr("/")
-			+ node->fileName);		
-
-		if (!file->open(QIODevice::WriteOnly)) {
-			writeLog(tr("Warning: Cannot write file %1: %2").arg(
-				l->currentDirPath() + tr("/") + 
-				file->fileName()).arg(file->errorString()));
-		} else {
-			ftpClient->get(encoded(path), file);
-		}
-		openedDownloadingFiles.append(file);
-	}
+// 	if (node->isDir) {
+// 		pendingDownloadRelativeDirs.append(currentDownloadRelativeDir);
+// 		processDirectory();
+// 	} else {
+// 		LocalDirWidget *l = parentTinyFtp->localCurrentWidget();
+// 		currentDownloadLocalDir = l->currentDirPath();
+// 
+// 		QFile *file = new QFile(currentDownloadLocalDir + tr("/")
+// 			+ node->fileName);		
+// 
+// 		if (!file->open(QIODevice::WriteOnly)) {
+// 			writeLog(tr("Warning: Cannot write file %1: %2").arg(
+// 				l->currentDirPath() + tr("/") + 
+// 				file->fileName()).arg(file->errorString()));
+// 		} else {
+// 			ftpClient->get(encoded(path), file);
+// 		}
+// 		openedDownloadingFiles.append(file);
+// 	}
 }
 
 void RemoteDirWidget::upload(const QString &filePath)
@@ -278,94 +289,108 @@ void RemoteDirWidget::upload(const QString &filePath)
         reconnect();
         return ;
     }
-    currentCommand = CMD_UPLOAD;
-    QFileInfo fileInfo(filePath);
-    currentUploadBaseDir = currentDirPathUrl();
-    currentUploadRelativeDir = tr("/") + fileInfo.fileName();
-    if (fileInfo.isDir()) {
-        pendingUploadRelativeDirs.append(currentUploadRelativeDir);
-        processDirectory();
-    } else {
-        QFile *file = new QFile(filePath);		
-        if (!file->open(QIODevice::ReadOnly)) {
-            writeLog(tr("Warning: Cannot read file %1: %2").arg(
-                filePath).arg(file->errorString()));
-        } else {
-			ftpClient->cd(encoded(currentUploadBaseDir));
-			ftpClient->put(file, encoded(fileInfo.fileName()));
-		}
-		openedUploadingFiles.append(file);
-    }
+
+	QFileInfo fileInfo(filePath);
+	Task task;
+	task.type = taskType_Upload;
+	task.icon = provider.icon(fileInfo);
+	task.fileName = fileInfo.fileName();
+	task.fileSize = fileInfo.size();
+	task.uploadRemoteDirPathUrl = currentDirPathUrl();
+	task.uploadLocalDirPath = fileInfo.absolutePath();
+	task.state = taskState_Pending;
+	task.urlAddress = urlAddress;
+	parentTinyFtp->queueWidget->addTask(task);
+
+//     currentCommand = CMD_UPLOAD;
+//     QFileInfo fileInfo(filePath);
+//     currentUploadBaseDir = currentDirPathUrl();
+//     currentUploadRelativeDir = tr("/") + fileInfo.fileName();
+//     if (fileInfo.isDir()) {
+//         pendingUploadRelativeDirs.append(currentUploadRelativeDir);
+//         processDirectory();
+//     } else {
+//         QFile *file = new QFile(filePath);		
+//         if (!file->open(QIODevice::ReadOnly)) {
+//             writeLog(tr("Warning: Cannot read file %1: %2").arg(
+//                 filePath).arg(file->errorString()));
+//         } else {
+// 			ftpClient->cd(encoded(currentUploadBaseDir));
+// 			ftpClient->put(file, encoded(fileInfo.fileName()));
+// 		}
+// 		openedUploadingFiles.append(file);
+//     }
 }
 
 void RemoteDirWidget::processDirectory()
-{
-	if (currentCommand == CMD_DOWNLOAD) {
-		if (pendingDownloadRelativeDirs.isEmpty()) {
-			//*******************************
-			// 下载完成
-			writeLog(tr("所有文件已下载完成"));
-
-			//*******************************
-			// 让本地窗口进行重置，显示文件下载后的目录树
-			LocalDirWidget *l = parentTinyFtp->localCurrentWidget();
-			l->reset();
-			currentCommand = CMD_NONE;
-			return ;
-		}
-		LocalDirWidget *l = parentTinyFtp->localCurrentWidget();
-		currentDownloadRelativeDir = pendingDownloadRelativeDirs.takeFirst();
-		currentDownloadLocalDir = l->currentDirPath() + currentDownloadRelativeDir;
-		if (QFileInfo(currentDownloadLocalDir).exists()) {
-			//*******************************
-			// 是否进行覆盖文件
-		}
-		QDir().mkdir(currentDownloadLocalDir);
-		ftpClient->cd(encoded(currentDownloadBaseDir + currentDownloadRelativeDir));
-		ftpClient->list();
-	} else if (currentCommand == CMD_UPLOAD) {
-		if (pendingUploadRelativeDirs.isEmpty()) {
-			//*******************************
-			// 下载完成
-			writeLog(tr("所有文件已上传完成"));
-
-			//*******************************
-			// 让远程窗口进行重置，显示文件下载后的目录树
-			RemoteDirWidget *r = parentTinyFtp->remoteCurrentWidget();
-			r->reset();
-			currentCommand = CMD_NONE;
-			return ;
-		}
-		LocalDirWidget *l = parentTinyFtp->localCurrentWidget();
-		currentUploadRelativeDir = pendingUploadRelativeDirs.takeFirst();
-		currentUploadLocalDir = l->currentDirPath() + currentUploadRelativeDir;
-		QString dirPath = currentUploadBaseDir + currentUploadRelativeDir;
-		QString cacheFilePath = currentDirPath() + currentUploadRelativeDir;
-		if (!QDir(cacheFilePath).exists()) {
-			QDir().mkdir(cacheFilePath);
-		}
-		ftpClient->mkdir(encoded(dirPath));
-		ftpClient->cd(encoded(dirPath));
-		foreach (QFileInfo fileInfo, QDir(currentUploadLocalDir).entryInfoList(
-			QDir::AllEntries | QDir::NoSymLinks | QDir::NoDotAndDotDot)) {
-				if (fileInfo.isDir()) {
-					pendingUploadRelativeDirs.append(currentUploadRelativeDir + tr("/") + fileInfo.fileName());
-				} else {
-					QFile *file = new QFile(fileInfo.absoluteFilePath());
-
-					if (!file->open(QIODevice::ReadOnly)) {
-						writeLog(tr("Warning: Cannot read file %1: %2").arg(
-							QDir::fromNativeSeparators(
-							file->fileName())).arg(file->errorString()));
-					} else {
-						ftpClient->put(file, encoded(fileInfo.fileName()));
-					}
-					openedUploadingFiles.append(file);
-				}
-		}
-	} else if (currentCommand == CMD_DEL) {
+ {
+// 	if (currentCommand == CMD_DOWNLOAD) {
+// 		if (pendingDownloadRelativeDirs.isEmpty()) {
+// 			//*******************************
+// 			// 下载完成
+// 			writeLog(tr("所有文件已下载完成"));
+// 
+// 			//*******************************
+// 			// 让本地窗口进行重置，显示文件下载后的目录树
+// 			LocalDirWidget *l = parentTinyFtp->localCurrentWidget();
+// 			l->reset();
+// 			currentCommand = CMD_NONE;
+// 			return ;
+// 		}
+// 		LocalDirWidget *l = parentTinyFtp->localCurrentWidget();
+// 		currentDownloadRelativeDir = pendingDownloadRelativeDirs.takeFirst();
+// 		currentDownloadLocalDir = l->currentDirPath() + currentDownloadRelativeDir;
+// 		if (QFileInfo(currentDownloadLocalDir).exists()) {
+// 			//*******************************
+// 			// 是否进行覆盖文件
+// 		}
+// 		QDir().mkdir(currentDownloadLocalDir);
+// 		ftpClient->cd(encoded(currentDownloadBaseDir + currentDownloadRelativeDir));
+// 		ftpClient->list();
+// 	} else if (currentCommand == CMD_UPLOAD) {
+// 		if (pendingUploadRelativeDirs.isEmpty()) {
+// 			//*******************************
+// 			// 下载完成
+// 			writeLog(tr("所有文件已上传完成"));
+// 
+// 			//*******************************
+// 			// 让远程窗口进行重置，显示文件下载后的目录树
+// 			RemoteDirWidget *r = parentTinyFtp->remoteCurrentWidget();
+// 			r->reset();
+// 			currentCommand = CMD_NONE;
+// 			return ;
+// 		}
+// 		LocalDirWidget *l = parentTinyFtp->localCurrentWidget();
+// 		currentUploadRelativeDir = pendingUploadRelativeDirs.takeFirst();
+// 		currentUploadLocalDir = l->currentDirPath() + currentUploadRelativeDir;
+// 		QString dirPath = currentUploadBaseDir + currentUploadRelativeDir;
+// 		QString cacheFilePath = currentDirPath() + currentUploadRelativeDir;
+// 		if (!QDir(cacheFilePath).exists()) {
+// 			QDir().mkdir(cacheFilePath);
+// 		}
+// 		ftpClient->mkdir(encoded(dirPath));
+// 		ftpClient->cd(encoded(dirPath));
+// 		foreach (QFileInfo fileInfo, QDir(currentUploadLocalDir).entryInfoList(
+// 			QDir::AllEntries | QDir::NoSymLinks | QDir::NoDotAndDotDot)) {
+// 				if (fileInfo.isDir()) {
+// 					pendingUploadRelativeDirs.append(currentUploadRelativeDir + tr("/") + fileInfo.fileName());
+// 				} else {
+// 					QFile *file = new QFile(fileInfo.absoluteFilePath());
+// 
+// 					if (!file->open(QIODevice::ReadOnly)) {
+// 						writeLog(tr("Warning: Cannot read file %1: %2").arg(
+// 							QDir::fromNativeSeparators(
+// 							file->fileName())).arg(file->errorString()));
+// 					} else {
+// 						ftpClient->put(file, encoded(fileInfo.fileName()));
+// 					}
+// 					openedUploadingFiles.append(file);
+// 				}
+// 		}
+	/*} else */
+	 if (currentCommand == CMD_DEL) {
         hasDir = false;
-        if (pendingDelRelativeDirs.isEmpty()) {
+        if (pendingDelRelativeDirPathUrls.isEmpty()) {
 			//*******************************
 			// 下载完成
 			writeLog(tr("所有文件已删除完成"));
@@ -378,8 +403,8 @@ void RemoteDirWidget::processDirectory()
 			return ;
 		}
 
-		currentDelRelativeDir = pendingDelRelativeDirs.top();
-        ftpClient->cd(encoded(currentDelBaseDir + currentDelRelativeDir));
+		currentDelRelativeDirPathUrl = pendingDelRelativeDirPathUrls.top();
+        ftpClient->cd(encoded(currentDelBaseDirPathUrl + currentDelRelativeDirPathUrl));
         ftpClient->list();
 	}
 }
@@ -387,19 +412,19 @@ void RemoteDirWidget::processDirectory()
 void RemoteDirWidget::listDirectoryFiles(const QString &dirName/* = ""*/)
 {
 	setListing(true);
-	currentListDir = dirName.isEmpty() ? currentDirPathUrl() :
+	currentListDirPathUrl = dirName.isEmpty() ? currentDirPathUrl() :
         QDir::fromNativeSeparators(QDir::cleanPath(currentDirPathUrl() + tr("/") + dirName));
-	currentListLocalDir = QDir::fromNativeSeparators(QDir::cleanPath(cacheDir + currentListDir));
-    delDir(currentListLocalDir);
-	QDir().mkpath(currentListLocalDir);
-	ftpClient->list(encoded(currentListDir));
+	currentListLocalDirPath = QDir::fromNativeSeparators(QDir::cleanPath(cacheDir + currentListDirPathUrl));
+    delDir(currentListLocalDirPath);
+	QDir().mkpath(currentListLocalDirPath);
+	ftpClient->list(encoded(currentListDirPathUrl));
 }
 
 void RemoteDirWidget::ftpListInfo(const QUrlInfo &urlInfo)
 {
 	if (listing()) {
 		if (urlInfo.isFile()) {
-            QString path = currentListLocalDir + tr("/")
+            QString path = currentListLocalDirPath + tr("/")
                 + decoded(urlInfo.name());
             QFile file(path);
             if (!file.exists()) {
@@ -411,7 +436,7 @@ void RemoteDirWidget::ftpListInfo(const QUrlInfo &urlInfo)
                 }
             }
 		} else if (urlInfo.isDir() && !urlInfo.isSymLink() && urlInfo.name() != tr(".") && urlInfo.name() != tr("..")) {
-			QString localDir = currentListLocalDir + tr("/") + decoded(urlInfo.name());
+			QString localDir = currentListLocalDirPath + tr("/") + decoded(urlInfo.name());
 			delDir(localDir);
 			QDir().mkpath(localDir);
 		}
@@ -422,25 +447,26 @@ void RemoteDirWidget::ftpListInfo(const QUrlInfo &urlInfo)
         filesInfoMap[decoded(urlInfo.name())] = urlInfo;
 	} 
 	
-	if (currentCommand == CMD_DOWNLOAD) {
-		if (urlInfo.isFile()) {
-            QFile *file = new QFile(currentDownloadLocalDir + tr("/")
-                + decoded(urlInfo.name()));
-
-            if (!file->open(QIODevice::WriteOnly)) {
-                writeLog(tr("Warning: Cannot write file %1: %2").arg(
-                    QDir::fromNativeSeparators(
-                    file->fileName())).arg(file->errorString()));
-            } else {
-                ftpClient->get(urlInfo.name(), file);
-            }
-            openedDownloadingFiles.append(file);
-		} else if (urlInfo.isDir() && !urlInfo.isSymLink()) {
-			pendingDownloadRelativeDirs.append(currentDownloadRelativeDir + tr("/") + decoded(urlInfo.name()));
-		}
-	} else if (currentCommand == CMD_DEL) {
+// 	if (currentCommand == CMD_DOWNLOAD) {
+// 		if (urlInfo.isFile()) {
+//             QFile *file = new QFile(currentDownloadLocalDir + tr("/")
+//                 + decoded(urlInfo.name()));
+// 
+//             if (!file->open(QIODevice::WriteOnly)) {
+//                 writeLog(tr("Warning: Cannot write file %1: %2").arg(
+//                     QDir::fromNativeSeparators(
+//                     file->fileName())).arg(file->errorString()));
+//             } else {
+//                 ftpClient->get(urlInfo.name(), file);
+//             }
+//             openedDownloadingFiles.append(file);
+// 		} else if (urlInfo.isDir() && !urlInfo.isSymLink()) {
+// 			pendingDownloadRelativeDirs.append(currentDownloadRelativeDir + tr("/") + decoded(urlInfo.name()));
+// 		}
+	/*} else*/ 
+	if (currentCommand == CMD_DEL) {
         if (urlInfo.isFile()) {
-            QString dirPath = currentDelBaseDir + currentDelRelativeDir + tr("/") + urlInfo.name();
+            QString dirPath = currentDelBaseDirPathUrl + currentDelRelativeDirPathUrl + tr("/") + urlInfo.name();
             QString path = cacheFilePath() + dirPath;
             QFile file(decoded(path));
             if (file.exists()) {
@@ -449,7 +475,7 @@ void RemoteDirWidget::ftpListInfo(const QUrlInfo &urlInfo)
             ftpClient->remove(urlInfo.name());
         } else if (urlInfo.isDir() && !urlInfo.isSymLink()) {
             hasDir = true;
-            pendingDelRelativeDirs.push(currentDelRelativeDir + tr("/") + decoded(urlInfo.name()));
+            pendingDelRelativeDirPathUrls.push(currentDelRelativeDirPathUrl + tr("/") + decoded(urlInfo.name()));
         }
 	}
 }
@@ -457,13 +483,13 @@ void RemoteDirWidget::ftpListInfo(const QUrlInfo &urlInfo)
 void RemoteDirWidget::ftpDone(bool error)
 {
 	if (listing()) {
-		if (currentListDir.isEmpty() || error) {
+		if (currentListDirPathUrl.isEmpty() || error) {
 			writeLog(tr("Error: ") + ftpClient->errorString());
 			filesInfoMap.clear();
 			setListing(false);
 			return ;
 		} else {
-			remoteDirTreeView->setRootPath(currentListLocalDir);
+			remoteDirTreeView->setRootPath(currentListLocalDirPath);
 			remoteDirTreeView->resizeColumnsToContents();
 			if (remoteDirTreeView->rowCount()) {
 				for (int row = 0; row < remoteDirTreeView->rowCount(); row++) {
@@ -481,7 +507,7 @@ void RemoteDirWidget::ftpDone(bool error)
 		}
 	} 
 	
-	if (currentCommand == CMD_DOWNLOAD) {
+	/*if (currentCommand == CMD_DOWNLOAD) {
 		if (error) {
 			writeLog(tr("Error: ") + ftpClient->errorString());
 			qDeleteAll(openedDownloadingFiles);
@@ -530,7 +556,8 @@ void RemoteDirWidget::ftpDone(bool error)
 
 			processDirectory();
 		}
-	} else if (currentCommand == CMD_MKDIR) {
+	} else*/ 
+	if (currentCommand == CMD_MKDIR) {
 		if (error) {
 			writeLog(tr("Error: ") + ftpClient->errorString());
 			currentCommand = CMD_NONE;
@@ -545,8 +572,8 @@ void RemoteDirWidget::ftpDone(bool error)
             currentCommand = CMD_NONE;
             return ;
         } else {
-            if (!hasDir && !pendingDelRelativeDirs.isEmpty()) {
-                QString dirPath = currentDelBaseDir + pendingDelRelativeDirs.pop();
+            if (!hasDir && !pendingDelRelativeDirPathUrls.isEmpty()) {
+                QString dirPath = currentDelBaseDirPathUrl + pendingDelRelativeDirPathUrls.pop();
                 QString delLocalDir = cacheFilePath() + dirPath;
                 delDir(delLocalDir);
                 ftpClient->rmdir(encoded(dirPath));
@@ -706,10 +733,10 @@ void RemoteDirWidget::del()
     currentCommand = CMD_DEL;
     QString filePath = currentFilePath();
     QFileInfo fileInfo(filePath);
-    currentDelBaseDir = currentDirPathUrl();
-    currentDelRelativeDir = tr("/") + fileInfo.fileName();
+    currentDelBaseDirPathUrl = currentDirPathUrl();
+    currentDelRelativeDirPathUrl = tr("/") + fileInfo.fileName();
     if (fileInfo.isDir()) {
-        pendingDelRelativeDirs.push(currentDelRelativeDir);
+        pendingDelRelativeDirPathUrls.push(currentDelRelativeDirPathUrl);
         processDirectory();
     } else {
         //*******************************
@@ -721,7 +748,7 @@ void RemoteDirWidget::del()
 
         //*******************************
         // 删除远程文件
-        ftpClient->cd(encoded(currentDelBaseDir));
+        ftpClient->cd(encoded(currentDelBaseDirPathUrl));
         ftpClient->remove(encoded(fileInfo.fileName()));
     }
 }

@@ -1,6 +1,7 @@
 #include "remotedirtreeview.h"
 #include "remotedirwidget.h"
 #include "dirtreemodel.h"
+#include "common.h"
 
 RemoteDirTreeView::RemoteDirTreeView(QWidget *parent)
     : QTreeView(parent)

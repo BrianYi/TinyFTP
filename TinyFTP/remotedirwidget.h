@@ -3,6 +3,7 @@
 
 #include <QtGui>
 #include <QFtp>
+#include "common.h"
 
 class TinyFTP;
 class DirTreeView;
@@ -14,20 +15,6 @@ class RemoteDirWidget : public QWidget
 public:
     friend RemoteDirTreeView;
 public:
-    enum Command { 
-        //CMD_LIST,		// 显示文件
-		CMD_NONE,
-        CMD_DOWNLOAD,
-        CMD_UPLOAD,
-        CMD_QUEUE,
-        CMD_EDIT,
-        CMD_READ,
-        CMD_EXEC,
-        CMD_DEL,
-        CMD_RENAME,
-		CMD_MKDIR,
-        CMD_PROPERTY
-    };
 	RemoteDirWidget(QWidget *parent);
 	~RemoteDirWidget();
     void connectToHost(const QString &address, const QString &port, const QString &usrname = QString(), 
@@ -101,25 +88,25 @@ private:
     QMap<QString, QUrlInfo> filesInfoMap;
 	
     QString cacheDir;
-    QString currentListDir;
-    QString currentListLocalDir;
+    QString currentListDirPathUrl;
+    QString currentListLocalDirPath;
 
-	QString currentDownloadBaseDir;		// "\xxx" 开头
-	QString currentDownloadRelativeDir;	// "\xxx" 开头
-										// ftp 路径:currentDownloadBaseDir + currentDownloadRelativeDir
-	QString currentDownloadLocalDir;
-	QStringList pendingDownloadRelativeDirs;
-
-	QString currentUploadBaseDir;
-	QString currentUploadRelativeDir;
-	QString currentUploadLocalDir;
-	QStringList pendingUploadRelativeDirs;
-
-    QString currentDelBaseDir;
-    QString currentDelRelativeDir;
-    //QString currentDelLocalDir;
-    QStack<QString> pendingDelRelativeDirs;
-    bool hasDir;
+// 	QString currentDownloadBaseDir;		// "\xxx" 开头
+// 	QString currentDownloadRelativeDir;	// "\xxx" 开头
+// 										// ftp 路径:currentDownloadBaseDir + currentDownloadRelativeDir
+// 	QString currentDownloadLocalDir;
+// 	QStringList pendingDownloadRelativeDirs;
+// 
+// 	QString currentUploadBaseDir;
+// 	QString currentUploadRelativeDir;
+// 	QString currentUploadLocalDir;
+// 	QStringList pendingUploadRelativeDirs;
+// 
+     QString currentDelBaseDirPathUrl;
+     QString currentDelRelativeDirPathUrl;
+//     //QString currentDelLocalDir;
+     QStack<QString> pendingDelRelativeDirPathUrls;
+     bool hasDir;
 
     QString currentOldFileName;
     QString currentNewFileName;
@@ -141,9 +128,9 @@ private:
 	QAction *newDirAction;
 	QAction *propertyAction;
 	TinyFTP *parentTinyFtp;
-	Command currentCommand;
-	QList<QFile *> openedDownloadingFiles;
-	QList<QFile *> openedUploadingFiles;
+	FtpCommand currentCommand;
+// 	QList<QFile *> openedDownloadingFiles;
+// 	QList<QFile *> openedUploadingFiles;
 	bool isListing;
 };
 

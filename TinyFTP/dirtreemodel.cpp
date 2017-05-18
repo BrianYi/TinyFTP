@@ -1,3 +1,4 @@
+#include "common.h"
 #include "dirtreemodel.h"
 
 DirTreeModel::DirTreeModel(QObject *parent)
@@ -41,27 +42,28 @@ QVariant DirTreeModel::data(const QModelIndex &index, int role /*= Qt::DisplayRo
         }
     } else if (index.column() == 1) {
         if (role == Qt::DisplayRole && !fileNode->isDir && !fileNode->isSystemLink) {
-			qreal fileSize = fileNode->fileSize;
-			int level = Byte;
-			QString sizeInfo = "";
-			while (qFloor(fileSize / 1024)) {
-				fileSize /= 1024.0;
-				level++;
-				if (level >= GigaByte)
-					break;
-			}
-			
-			fileSize = QString::number(fileSize, 'f', 2).toDouble();
-			if (level == Byte) {
-				sizeInfo = tr("%1 B").arg(fileSize);
-			} else if (level == KiloByte) {
-				sizeInfo = tr("%1 KB").arg(fileSize);
-			} else if (level == MegaByte) {
-				sizeInfo = tr("%1 MB").arg(fileSize);
-			} else if (level >= GigaByte) {
-				sizeInfo = tr("%1 GB").arg(fileSize);
-			}
-            return sizeInfo;
+			return fileSizeUnitTranslator(fileNode->fileSize);
+// 			qreal fileSize = fileNode->fileSize;
+// 			int level = Byte;
+// 			QString sizeInfo = "";
+// 			while (qFloor(fileSize / 1024)) {
+// 				fileSize /= 1024.0;
+// 				level++;
+// 				if (level >= GigaByte)
+// 					break;
+// 			}
+// 			
+// 			fileSize = QString::number(fileSize, 'f', 2).toDouble();
+// 			if (level == Byte) {
+// 				sizeInfo = tr("%1 B").arg(fileSize);
+// 			} else if (level == KiloByte) {
+// 				sizeInfo = tr("%1 KB").arg(fileSize);
+// 			} else if (level == MegaByte) {
+// 				sizeInfo = tr("%1 MB").arg(fileSize);
+// 			} else if (level >= GigaByte) {
+// 				sizeInfo = tr("%1 GB").arg(fileSize);
+// 			}
+//             return sizeInfo;
         } else if (role == Qt::TextAlignmentRole) {
             return int(Qt::AlignRight | Qt::AlignVCenter);
         }
