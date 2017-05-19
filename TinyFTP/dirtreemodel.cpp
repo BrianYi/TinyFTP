@@ -5,6 +5,9 @@ DirTreeModel::DirTreeModel(QObject *parent)
     : QAbstractItemModel(parent)
 {
 	rootNode = 0;
+	if (parent) {
+		connect(this, SIGNAL(editingFinished(const QModelIndex &)), parent, SLOT(editingFinished(const QModelIndex &)));
+	}
 }
 
 DirTreeModel::~DirTreeModel()

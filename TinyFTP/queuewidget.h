@@ -49,12 +49,26 @@ public:
 	bool isRunning();
 private:
 	FTPClient *idleFtpClient();
+	Task *pendingTask();
 	QQueue<Task*> tasksQueue;
 	QList<FTPClient*> ftpClients;
 	QMutex tasksQueueMutex;
 	QMutex ftpClientsMutex;
 	bool isStop;
 	TinyFTP *parentTinyFTP;
+};
+
+struct TaskData
+{
+	QIcon fileIcon;
+	QString fileName;
+	bool isDir;
+	qint64 fileSize;
+	QUrl urlAddress;
+	QString downloadRemoteDirPathUrl;
+	QString downloadLocalDirPath;
+	QString uploadRemoteDirPathUrl;
+	QString uploadLocalDirPath;
 };
 
 class Task
@@ -64,22 +78,23 @@ public:
 	QString taskName() const;
 	qint64 taskId() const;
     QWidget *parent();  // RemoteDirWidget
-    TaskType type;
-    QIcon icon;
-    QString fileName;
-    bool isDir;
-    qint64 fileSize;
-    TaskState state;
-    QUrl urlAddress;
-	QString downloadRemoteDirPathUrl;
-	QString downloadLocalDirPath;
-	QString uploadRemoteDirPathUrl;
-	QString uploadLocalDirPath;
+	TaskType taskType() const;
+	TaskStatus taskStatus() const;
+	TaskData taskData() const;
+	void setTaskName(const QString &name);
+	void setTaskType(TaskType type);
+	void setTaskStatus(TaskStatus status);
+	void setTaskData(TaskData data);
+protected:
+	TaskType type;
+	TaskStatus status;
+	TaskData data;
+	QString name;
+	qint64 id;
+	QMutex mutex;
+	static qint64 sId;
+	static QMutex sMutex;
 private:
-    QWidget *parentWidget;
-	QString objName;
-	qint64 objId;
-	static qint64 id;
-	static QMutex mutex;
+	QWidget *parentWidget;
 };
 #endif // QUEUEWIDGET_H

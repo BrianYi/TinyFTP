@@ -18,6 +18,8 @@ public:
 	void download(const QString remoteDirUrl, const QString localDir,
 		const QString fileName, const bool isDir);
 	void upload(const QString remoteDirPathUrl, const QString filePath);
+	void setCurrentTask(Task *task);
+	Task *currentTask();
 signals:
 	void ftpMsg(const QString &msg);
 	void refreshLocalDirWidget();
@@ -25,6 +27,7 @@ signals:
 	private slots:
 		void ftpListInfo(const QUrlInfo &urlInfo);
 		void ftpDone(bool error);
+		void ftpCommandFinished(int,bool error);
 private:
 	void processDirectory();
 	QString currentDownloadBaseDirPathUrl;		// "\xxx" ¿ªÍ·
@@ -47,11 +50,12 @@ private:
 // 	bool hasDir;
 
 	QUrl urlAddress;
-	FtpCommand currentCommand;
+	FtpCommand curCommand;
 	QList<QFile *> openedDownloadingFiles;
 	QList<QFile *> openedUploadingFiles;
 /*	Task task;*/
-	TinyFTP *parentTinyFtp;
+	Task *curTask;
+/*	TinyFTP *parentTinyFtp;*/
 };
 
 #endif // FTPCLIENT_H

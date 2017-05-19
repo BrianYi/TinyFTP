@@ -4,8 +4,8 @@
 #include "remotedirwidget.h"
 #include "localdirwidget.h"
 
-qint64 Task::id = 0;
-QMutex Task::mutex;
+qint64 Task::sId = 0;
+QMutex Task::sMutex;
 
 QueueWidget::QueueWidget(const QString &title, QWidget * parent/* = 0*/)
 	: QDockWidget(title, parent)
@@ -40,20 +40,22 @@ QueueWidget::~QueueWidget()
 void QueueWidget::addTask(Task *task)
 {
 	QTreeWidgetItem *item = new QTreeWidgetItem(queueTreeWidget);
+	TaskData taskData = task->taskData();
 	item->setText(0, QString::number(task->taskId()));
-	item->setData(1, Qt::DecorationRole, task->icon);
-	item->setText(1, task->fileName);
-	item->setText(2, fileSizeUnitTranslator(task->fileSize));
-	item->setText(3, task->urlAddress.host());
-	if (task->type == taskType_Download) {
-		item->setText(4, task->downloadRemoteDirPathUrl);
-		item->setText(5, task->downloadLocalDirPath);
-	} else if (task->type == taskType_Upload) {
-		item->setText(4, task->uploadLocalDirPath);
-		item->setText(5, task->uploadRemoteDirPathUrl);
+	item->setData(1, Qt::DecorationRole, taskData.fileIcon);
+	item->setText(1, taskData.fileName);
+	item->setText(2, fileSizeUnitTranslator(taskData.fileSize));
+	item->setText(3, taskData.urlAddress.host());
+	if (task->taskType() == taskType_Download) {
+		item->setText(4, taskData.downloadRemoteDirPathUrl);
+		item->setText(5, taskData.downloadLocalDirPath);
+	} else if (task->taskType() == taskType_Upload) {
+		item->setText(4, taskData.uploadLocalDirPath);
+		item->setText(5, taskData.uploadRemoteDirPathUrl);
 	}
 	item->setText(6, tr("等待"));
-	queueTreeWidget->openPersistentEditor(item, 7);
+/*	item->setText(7, )*/
+	//queueTreeWidget->openPersistentEditor(item, 7);
 	taskThread->addTask(task);
 	if (!taskThread->isRunning()) {
 		taskThread->start();
@@ -99,42 +101,38 @@ void TaskThread::run()
 {
 	isStop = false;
 	while (!isStop) {
-        {
-            QMutexLocker lockerQueue(&tasksQueueMutex);
-            if (!tasksQueue.isEmpty()) {
-                FTPClient *f = idleFtpClient();
-                if (f) {
-                    Task *task = tasksQueue.dequeue();
-					f->disconnect(SIGNAL(ftpMsg(const QString &)));
-					f->disconnect(SIGNAL(refreshLocalDirWidget()));		// 刷新本地目录树
-					f->disconnect(SIGNAL(refreshRemoteDirWidget()));	// 刷新远程目录树
-                    connect(f, SIGNAL(ftpMsg(const QString &)), task->parent(), SLOT(writeLog(const QString &)));
-					connect(f, SIGNAL(refreshLocalDirWidget()), parentTinyFTP->localCurrentWidget(), SLOT(refresh()));
-					connect(f, SIGNAL(refreshRemoteDirWidget()), task->parent(), SLOT(refresh()));
+		Task *task = pendingTask();
+		FTPClient *ftpClient = idleFtpClient();
+		if (task && ftpClient) {
+			TaskData taskData = task->taskData();
+			ftpClient->disconnect(SIGNAL(ftpMsg(const QString &)));
+			ftpClient->disconnect(SIGNAL(refreshLocalDirWidget()));		// 刷新本地目录树
+			ftpClient->disconnect(SIGNAL(refreshRemoteDirWidget()));	// 刷新远程目录树
+			connect(ftpClient, SIGNAL(ftpMsg(const QString &)), task->parent(), SLOT(writeLog(const QString &)));
+			connect(ftpClient, SIGNAL(refreshLocalDirWidget()), parentTinyFTP->localCurrentWidget(), SLOT(refresh()));
+			connect(ftpClient, SIGNAL(refreshRemoteDirWidget()), task->parent(), SLOT(refresh()));
 
-                    //*******************************
-                    // 处理Task
-                    f->sendMsg(tr(">>>>>>>>>>>开始任务[%1]<<<<<<<<<<<").arg(task->taskName()));
-                    f->connectToHost(task->urlAddress.host(), task->urlAddress.port());
-                    f->login(task->urlAddress.userName(), task->urlAddress.password());
-                    /*sleep(3);*/
-                    if (task->type == taskType_Download) {
-                        f->sendMsg(tr("开始下载 %1 到 %2").arg(task->downloadRemoteDirPathUrl + tr("/") + task->fileName).arg(
-                            task->downloadLocalDirPath + tr("/") + task->fileName));
-                        f->download(task->downloadRemoteDirPathUrl, task->downloadLocalDirPath,
-                            task->fileName, task->isDir);
-                    } else if (task->type == taskType_Upload) {
-                        f->sendMsg(tr("开始上传 %1 到 %2").arg(task->uploadRemoteDirPathUrl + tr("/") + task->fileName).arg(
-                            task->uploadLocalDirPath + tr("/") + task->fileName));
-                        f->upload(task->uploadRemoteDirPathUrl, task->uploadLocalDirPath + tr("/") + task->fileName);
-                    }
-                    delete task;
-                } else {
-                    sleep(1);
-                }
-            } 
-        }
-
+			//*******************************
+			// 处理Task
+			ftpClient->setCurrentTask(task);
+			//ftpClient->sendMsg(tr(">>>>>>>>>>>开始任务[%1]<<<<<<<<<<<").arg(task->taskName()));
+			ftpClient->connectToHost(taskData.urlAddress.host(), taskData.urlAddress.port());
+			ftpClient->login(taskData.urlAddress.userName(), taskData.urlAddress.password());
+			/*sleep(3);*/
+			if (task->taskType() == taskType_Download) {
+				// 					ftpClient->sendMsg(tr("开始下载 %1 到 %2").arg(taskData.downloadRemoteDirPathUrl + 
+				// 						tr("/") + taskData.fileName).arg(
+				// 						taskData.downloadLocalDirPath + tr("/") + taskData.fileName));
+				ftpClient->download(taskData.downloadRemoteDirPathUrl, taskData.downloadLocalDirPath,
+					taskData.fileName, taskData.isDir);
+			} else if (task->taskType() == taskType_Upload) {
+				// 					ftpClient->sendMsg(tr("开始上传 %1 到 %2").arg(taskData.uploadRemoteDirPathUrl + 
+				// 						tr("/") + taskData.fileName).arg(
+				// 						taskData.uploadLocalDirPath + tr("/") + taskData.fileName));
+				ftpClient->upload(taskData.uploadRemoteDirPathUrl, taskData.uploadLocalDirPath + 
+					tr("/") + taskData.fileName);
+			}
+		} 
 		sleep(1);
 	}
 	isStop = true;
@@ -153,9 +151,19 @@ bool TaskThread::isRunning()
 FTPClient * TaskThread::idleFtpClient()
 {
 	QMutexLocker locker(&ftpClientsMutex);
-	foreach (FTPClient *f, ftpClients) {
-		if (f->idle())
-			return f;
+	foreach (FTPClient *ftpClient, ftpClients) {
+		if (ftpClient->idle())
+			return ftpClient;
+	}
+	return 0;
+}
+
+Task * TaskThread::pendingTask()
+{
+	QMutexLocker locker(&tasksQueueMutex);
+	foreach (Task *task, tasksQueue) {
+		if (task->taskStatus() == taskStatus_Pending)
+			return task;
 	}
 	return 0;
 }
@@ -165,23 +173,62 @@ Task::Task(QWidget *parent/* = 0*/)
 {
 	{
 		QMutexLocker locker(&mutex);
-		objId = ++id;
+		id = ++sId;
 	}
     parentWidget = static_cast<RemoteDirWidget*>(parent);
-	objName = QObject::tr("Task%1").arg(objId);
+	name = QObject::tr("Task%1").arg(id);
 }
 
 QString Task::taskName() const
 {
-	return objName;
+	return name;
 }
 
 qint64 Task::taskId() const
 {
-	return objId;
+	return id;
 }
 
 QWidget * Task::parent()
 {
     return parentWidget;
+}
+
+TaskType Task::taskType() const
+{
+	return type;
+}
+
+TaskStatus Task::taskStatus() const
+{
+	return status;
+}
+
+TaskData Task::taskData() const
+{
+	return data;
+}
+
+void Task::setTaskName(const QString &name)
+{
+	QMutexLocker locker(&mutex);
+	this->name = name;
+}
+
+void Task::setTaskType(TaskType type)
+{
+	QMutexLocker locker(&mutex);
+	this->type = type;
+}
+
+void Task::setTaskStatus(TaskStatus status)
+{
+	QMutexLocker locker(&mutex);
+	this->status = status;
+}
+
+void Task::setTaskData(TaskData data)
+{
+	QMutexLocker locker(&mutex);
+	this->data = data;
 }

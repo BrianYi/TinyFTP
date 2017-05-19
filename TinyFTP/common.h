@@ -21,10 +21,11 @@ enum TaskType
     taskType_Download
 };
 
-enum TaskState
+enum TaskStatus
 {
-    taskState_Unknown,	taskState_Pending,
-    taskState_Abort
+    taskStatus_Unknown,	taskStatus_Doing,	taskStatus_Pending,
+    taskStatus_Abort,
+	taskStatus_Done
 };
 
 enum FtpCommand { 

@@ -125,6 +125,9 @@
     <ClCompile Include="GeneratedFiles\Release\moc_ftpclient.cpp">
       <Filter>Generated Files\Release</Filter>
     </ClCompile>
+    <ClCompile Include="cell.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="dirtreemodel.h">
@@ -158,6 +161,9 @@
       <Filter>Header Files</Filter>
     </CustomBuild>
     <CustomBuild Include="common.h">
+      <Filter>Header Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="cell.h">
       <Filter>Header Files</Filter>
     </CustomBuild>
   </ItemGroup>
