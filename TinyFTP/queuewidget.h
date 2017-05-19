@@ -2,7 +2,7 @@
 #define QUEUEWIDGET_H
 
 #include <QtGui>
-#include <QItemDelegate>
+#include <QStyledItemDelegate>
 #include <QMutex>
 #include <QMutexLocker>
 #include <QQueue>
@@ -12,7 +12,7 @@ class FTPClient;
 class TaskThread;
 class TinyFTP;
 class RemoteDirWidget;
-class QueueDelegate : public QItemDelegate
+class QueueDelegate : public QStyledItemDelegate
 {
 	Q_OBJECT
 public:

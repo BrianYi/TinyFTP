@@ -2,6 +2,7 @@
 #include "ftpclient.h"
 #include "tinyftp.h"
 #include "remotedirwidget.h"
+#include "localdirwidget.h"
 
 qint64 Task::id = 0;
 QMutex Task::mutex;
@@ -60,7 +61,7 @@ void QueueWidget::addTask(Task *task)
 }
 
 QueueDelegate::QueueDelegate(QObject *parent /*= 0*/)
-	: QItemDelegate(parent)
+	: QStyledItemDelegate(parent)
 {
 
 }
@@ -68,10 +69,9 @@ QueueDelegate::QueueDelegate(QObject *parent /*= 0*/)
 QWidget * QueueDelegate::createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
 	if (index.column() == 7) {
-		QProgressBar *p = new QProgressBar(parent);
-		return p;
+		return new QProgressBar(parent);
 	}
-	return QItemDelegate::createEditor(parent, option, index);
+	return QStyledItemDelegate::createEditor(parent, option, index);
 }
 
 TaskThread::TaskThread(QObject *parent /*= 0*/)
@@ -105,20 +105,26 @@ void TaskThread::run()
                 FTPClient *f = idleFtpClient();
                 if (f) {
                     Task *task = tasksQueue.dequeue();
+					f->disconnect(SIGNAL(ftpMsg(const QString &)));
+					f->disconnect(SIGNAL(refreshLocalDirWidget()));		// 刷新本地目录树
+					f->disconnect(SIGNAL(refreshRemoteDirWidget()));	// 刷新远程目录树
                     connect(f, SIGNAL(ftpMsg(const QString &)), task->parent(), SLOT(writeLog(const QString &)));
+					connect(f, SIGNAL(refreshLocalDirWidget()), parentTinyFTP->localCurrentWidget(), SLOT(refresh()));
+					connect(f, SIGNAL(refreshRemoteDirWidget()), task->parent(), SLOT(refresh()));
+
                     //*******************************
                     // 处理Task
-                    f->sendMsg(tr("开始任务%1").arg(task->taskName()));
+                    f->sendMsg(tr(">>>>>>>>>>>开始任务[%1]<<<<<<<<<<<").arg(task->taskName()));
                     f->connectToHost(task->urlAddress.host(), task->urlAddress.port());
                     f->login(task->urlAddress.userName(), task->urlAddress.password());
                     /*sleep(3);*/
                     if (task->type == taskType_Download) {
-                        f->sendMsg(tr("准备下载 %1 到 %2").arg(task->downloadRemoteDirPathUrl + tr("/") + task->fileName).arg(
+                        f->sendMsg(tr("开始下载 %1 到 %2").arg(task->downloadRemoteDirPathUrl + tr("/") + task->fileName).arg(
                             task->downloadLocalDirPath + tr("/") + task->fileName));
                         f->download(task->downloadRemoteDirPathUrl, task->downloadLocalDirPath,
                             task->fileName, task->isDir);
                     } else if (task->type == taskType_Upload) {
-                        f->sendMsg(tr("准备上传 %1 到 %2").arg(task->uploadRemoteDirPathUrl + tr("/") + task->fileName).arg(
+                        f->sendMsg(tr("开始上传 %1 到 %2").arg(task->uploadRemoteDirPathUrl + tr("/") + task->fileName).arg(
                             task->uploadLocalDirPath + tr("/") + task->fileName));
                         f->upload(task->uploadRemoteDirPathUrl, task->uploadLocalDirPath + tr("/") + task->fileName);
                     }

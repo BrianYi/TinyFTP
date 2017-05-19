@@ -442,10 +442,10 @@ void RemoteDirWidget::ftpListInfo(const QUrlInfo &urlInfo)
 			delDir(localDir);
 			QDir().mkpath(localDir);
 		}
-        if (filesInfoMap.count(decoded(urlInfo.name()))) {
-            writeLog(tr("Error: filesInfoMap has the same key: %1").arg(decoded(urlInfo.name())));
-            return ;
-        }
+//         if (filesInfoMap.count(decoded(urlInfo.name()))) {
+//             writeLog(tr("Error: filesInfoMap has the same key: %1").arg(decoded(urlInfo.name())));
+//             return ;
+//         }
         filesInfoMap[decoded(urlInfo.name())] = urlInfo;
 	} 
 	

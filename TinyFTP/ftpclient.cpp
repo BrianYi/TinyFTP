@@ -34,7 +34,7 @@ void FTPClient::download(const QString remoteDirPathUrl, const QString localDirP
 
 	currentDownloadBaseDirPathUrl = /*path.left(lstIdx);*//*currentDirPathUrl()*/remoteDirPathUrl;
 	currentDownloadRelativeDirPathUrl = /*path.mid(lstIdx);*/tr("/") + /*node->fileName*/fileName;
-
+	currentDownloadLocalBaseDirPath = localDirPath;
 	// 1. 文件直接下载
 	// 2. 目录递归下载
 	if (/*node->isDir*/isDir) {
@@ -42,14 +42,14 @@ void FTPClient::download(const QString remoteDirPathUrl, const QString localDirP
 		processDirectory();
 	} else {
 		/*LocalDirWidget *l = parentTinyFtp->localCurrentWidget();*/
-		currentDownloadLocalDirPath = /*l->currentDirPath()*/localDirPath;
+		currentDownloadLocalDirPath = /*l->currentDirPath()*/currentDownloadLocalBaseDirPath;
 
 		QFile *file = new QFile(currentDownloadLocalDirPath + tr("/")
 			+ /*node->fileName*/fileName);		
 
 		if (!file->open(QIODevice::WriteOnly)) {
 			emit ftpMsg(tr("Warning: Cannot write file %1: %2").arg(
-				/*l->currentDirPath()*/localDirPath + tr("/") + 
+				/*l->currentDirPath()*/currentDownloadLocalBaseDirPath + tr("/") + 
 				file->fileName()).arg(file->errorString()));
 		} else {
 			this->get(encoded(/*path*/remoteDirPathUrl + tr("/") + fileName), file);
@@ -64,6 +64,7 @@ void FTPClient::upload(const QString remoteDirPathUrl, const QString filePath)
 	QFileInfo fileInfo(filePath);
 	currentUploadBaseDirPathUrl = /*currentDirPathUrl()*/remoteDirPathUrl;
 	currentUploadRelativeDirPathUrl = tr("/") + fileInfo.fileName();
+	currentUploadLocalBaseDirPath = fileInfo.absolutePath();
 	if (fileInfo.isDir()) {
 		pendingUploadRelativeDirPathUrls.append(currentUploadRelativeDirPathUrl);
 		processDirectory();
@@ -193,14 +194,16 @@ void FTPClient::processDirectory()
 
 			//*******************************
 			// 让本地窗口进行重置，显示文件下载后的目录树
- 			LocalDirWidget *l = parentTinyFtp->localCurrentWidget();
- 			l->reset();
+//  			LocalDirWidget *l = parentTinyFtp->localCurrentWidget();
+//  			l->reset();
+			emit refreshLocalDirWidget();
 			currentCommand = CMD_NONE;
+			this->close();	// 断开连接
 			return ;
 		}
-		LocalDirWidget *l = parentTinyFtp->localCurrentWidget();
+		//LocalDirWidget *l = parentTinyFtp->localCurrentWidget();
 		currentDownloadRelativeDirPathUrl = pendingDownloadRelativeDirPathUrls.takeFirst();
-		currentDownloadLocalDirPath = l->currentDirPath() + currentDownloadRelativeDirPathUrl;
+		currentDownloadLocalDirPath = /*l->currentDirPath()*/currentDownloadLocalBaseDirPath + currentDownloadRelativeDirPathUrl;
 		if (QFileInfo(currentDownloadLocalDirPath).exists()) {
 			//*******************************
 			// 是否进行覆盖文件
@@ -216,14 +219,16 @@ void FTPClient::processDirectory()
 
 			//*******************************
 			// 让远程窗口进行重置，显示文件下载后的目录树
-			RemoteDirWidget *r = parentTinyFtp->remoteCurrentWidget();
-			r->reset();
+// 			RemoteDirWidget *r = parentTinyFtp->remoteCurrentWidget();
+// 			r->reset();
+			emit refreshRemoteDirWidget();
 			currentCommand = CMD_NONE;
+			this->close();	// 断开连接
 			return ;
 		}
-		LocalDirWidget *l = parentTinyFtp->localCurrentWidget();
+		/*LocalDirWidget *l = parentTinyFtp->localCurrentWidget();*/
 		currentUploadRelativeDirPathUrl = pendingUploadRelativeDirPathUrls.takeFirst();
-		currentUploadLocalDirPath = l->currentDirPath() + currentUploadRelativeDirPathUrl;
+		currentUploadLocalDirPath = /*l->currentDirPath()*/currentUploadLocalBaseDirPath + currentUploadRelativeDirPathUrl;
 		QString dirPath = currentUploadBaseDirPathUrl + currentUploadRelativeDirPathUrl;
 		QString cacheFilePath = QDir().path() + currentUploadRelativeDirPathUrl;
 		if (!QDir(cacheFilePath).exists()) {
