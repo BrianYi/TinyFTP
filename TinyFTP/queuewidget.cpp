@@ -3,6 +3,7 @@
 #include "tinyftp.h"
 #include "remotedirwidget.h"
 #include "localdirwidget.h"
+#include <QTreeWidgetItemIterator>
 
 qint64 Task::sId = 0;
 QMutex Task::sMutex;
@@ -14,6 +15,7 @@ QueueWidget::QueueWidget(const QString &title, QWidget * parent/* = 0*/)
 	queueTreeWidget = new QTreeWidget(parent);
 	queueDelegate = new QueueDelegate(queueTreeWidget);
 	taskThread = new TaskThread(parent);
+    taskThread->setObject(this);
 	queueTreeWidget->setItemDelegateForColumn(7, queueDelegate);
 	queueTreeWidget->header()->setStretchLastSection(true);
 	queueTreeWidget->setAlternatingRowColors(true);
@@ -55,11 +57,36 @@ void QueueWidget::addTask(Task *task)
 	}
 	item->setText(6, tr("等待"));
 /*	item->setText(7, )*/
-	//queueTreeWidget->openPersistentEditor(item, 7);
+	queueTreeWidget->openPersistentEditor(item, 7);
+    QProgressBar *p = static_cast<QProgressBar*>(queueTreeWidget->itemWidget(item, 7));
+    p->setRange(0, taskData.fileSize);
+    //item->setData(7, Qt::UserRole, 20);
+   /* task->setObject(static_cast<QObject*>(p));*/
+/*    QProgressBar *p = static_cast<QProgressBar*>(queueTreeWidget->itemWidget(item, 7));*/
 	taskThread->addTask(task);
 	if (!taskThread->isRunning()) {
 		taskThread->start();
 	}
+}
+
+void QueueWidget::updateProgressValue(qint64 done, qint64 total)
+{
+    FTPClient *ftpClient = static_cast<FTPClient*>(sender());
+    Task *task = ftpClient->currentTask();
+    QTreeWidgetItem *item = findItem(task->taskId());
+    item->setData(7, Qt::UserRole, done);
+}
+
+QTreeWidgetItem * QueueWidget::findItem(qint64 taskId)
+{
+    QTreeWidgetItemIterator it(queueTreeWidget);
+    while (*it) {
+        if ((*it)->text(0).toLongLong() == taskId) {
+            return *it;
+        }
+        ++it;
+    }
+    return 0;
 }
 
 QueueDelegate::QueueDelegate(QObject *parent /*= 0*/)
@@ -76,6 +103,27 @@ QWidget * QueueDelegate::createEditor(QWidget *parent, const QStyleOptionViewIte
 	return QStyledItemDelegate::createEditor(parent, option, index);
 }
 
+void QueueDelegate::setEditorData(QWidget *editor, const QModelIndex &index) const
+{
+    if (index.column() == 7) {
+        qint64 value = qint64(index.model()->data(index, Qt::UserRole).toLongLong());
+        QProgressBar *progress = static_cast<QProgressBar*>(editor);
+        progress->setValue(value);
+    } else {
+        QStyledItemDelegate::setEditorData(editor, index);
+    }
+}
+
+void QueueDelegate::setModelData(QWidget *editor, QAbstractItemModel *model, const QModelIndex &index) const
+{
+    if (index.column() == 7) {
+        QProgressBar *progress = static_cast<QProgressBar*>(editor);
+        model->setData(index, progress->value(), Qt::UserRole);
+    } else {
+        QStyledItemDelegate::setModelData(editor, model, index);
+    }
+}
+
 TaskThread::TaskThread(QObject *parent /*= 0*/)
 	: QThread(parent)
 {
@@ -84,6 +132,7 @@ TaskThread::TaskThread(QObject *parent /*= 0*/)
 	for (int i = 0; i < TASK_THREAD_MAX_FTP_CLIENT; i++) {
 		ftpClients.append(new FTPClient(parentTinyFTP));
 	}
+    object = 0;
 }
 
 TaskThread::~TaskThread()
@@ -108,10 +157,16 @@ void TaskThread::run()
 			ftpClient->disconnect(SIGNAL(ftpMsg(const QString &)));
 			ftpClient->disconnect(SIGNAL(refreshLocalDirWidget()));		// 刷新本地目录树
 			ftpClient->disconnect(SIGNAL(refreshRemoteDirWidget()));	// 刷新远程目录树
+            ftpClient->disconnect(SIGNAL(dataTransferProgress(qint64,qint64)));
 			connect(ftpClient, SIGNAL(ftpMsg(const QString &)), task->parent(), SLOT(writeLog(const QString &)));
 			connect(ftpClient, SIGNAL(refreshLocalDirWidget()), parentTinyFTP->localCurrentWidget(), SLOT(refresh()));
 			connect(ftpClient, SIGNAL(refreshRemoteDirWidget()), task->parent(), SLOT(refresh()));
-
+            QueueWidget *queueWidget = static_cast<QueueWidget*>(this->getObject());
+            if (queueWidget) {
+                /*QProgressBar *p = static_cast<QProgressBar*>(task->taskObject());*/
+                //bool c = connect(ftpClient, SIGNAL(dataTransferProgress(qint64,qint64)), task, SLOT(updateProgressStatus(qint64,qint64)));
+                //connect(ftpClient, SIGNAL(dataTransferProgress(qint64,qint64)), queueWidget, SLOT(updateProgressValue(qint64,qint64)));
+            }
 			//*******************************
 			// 处理Task
 			ftpClient->setCurrentTask(task);
@@ -168,14 +223,25 @@ Task * TaskThread::pendingTask()
 	return 0;
 }
 
-Task::Task(QWidget *parent/* = 0*/)
-    : parentWidget(parent)
+void TaskThread::setObject(QObject *obj)
+{
+    object = obj;
+}
+
+QObject * TaskThread::getObject()
+{
+    return object;
+}
+
+Task::Task(QObject *parent/* = 0*/)
+    : parentObject(parent)
 {
 	{
 		QMutexLocker locker(&mutex);
 		id = ++sId;
 	}
-    parentWidget = static_cast<RemoteDirWidget*>(parent);
+    parentObject = static_cast<RemoteDirWidget*>(parent);
+    /*object = 0;*/
 	name = QObject::tr("Task%1").arg(id);
 }
 
@@ -189,9 +255,9 @@ qint64 Task::taskId() const
 	return id;
 }
 
-QWidget * Task::parent()
+QObject * Task::parent()
 {
-    return parentWidget;
+    return parentObject;
 }
 
 TaskType Task::taskType() const
@@ -208,6 +274,11 @@ TaskData Task::taskData() const
 {
 	return data;
 }
+
+// QObject * Task::taskObject()
+// {
+//     return object;
+// }
 
 void Task::setTaskName(const QString &name)
 {
@@ -232,3 +303,17 @@ void Task::setTaskData(TaskData data)
 	QMutexLocker locker(&mutex);
 	this->data = data;
 }
+
+// void Task::setObject(QObject *obj)
+// {
+//     QMutexLocker locker(&mutex);
+//     this->object = obj;
+// }
+
+// void Task::updateProgressStatus(qint64 done, qint64 total)
+// {
+//     QMutexLocker locker(&mutex);
+//     QProgressBar *p = static_cast<QProgressBar*>(object);
+//     p->setValue(done);
+//     p->reset();
+// }

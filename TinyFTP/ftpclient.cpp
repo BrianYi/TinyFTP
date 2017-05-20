@@ -9,7 +9,7 @@ FTPClient::FTPClient(QObject *parent)
 {
 	connect(this, SIGNAL(done(bool)), this, SLOT(ftpDone(bool)));
 	connect(this, SIGNAL(commandFinished(int,bool)), this, SLOT(ftpCommandFinished(int,bool)));
-	connect(this, SIGNAL(listInfo(const QUrlInfo &urlInfo)), this, SLOT(ftpListInfo(const QUrlInfo &urlInfo)));
+	connect(this, SIGNAL(listInfo(const QUrlInfo &)), this, SLOT(ftpListInfo(const QUrlInfo &)));
 	curTask = 0;
 }
 
