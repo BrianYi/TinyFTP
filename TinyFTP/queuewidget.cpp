@@ -13,10 +13,10 @@ QueueWidget::QueueWidget(const QString &title, QWidget * parent/* = 0*/)
 {
 	tabWidget = new QTabWidget(parent);
 	queueTreeWidget = new QTreeWidget(parent);
-	queueDelegate = new QueueDelegate(queueTreeWidget);
+	//queueDelegate = new QueueDelegate(queueTreeWidget);
 	taskThread = new TaskThread(parent);
     taskThread->setObject(this);
-	queueTreeWidget->setItemDelegateForColumn(7, queueDelegate);
+	//queueTreeWidget->setItemDelegateForColumn(7, queueDelegate);
 	queueTreeWidget->header()->setStretchLastSection(true);
 	queueTreeWidget->setAlternatingRowColors(true);
 	queueTreeWidget->setSelectionMode(QAbstractItemView::SingleSelection);
@@ -57,9 +57,11 @@ void QueueWidget::addTask(Task *task)
 	}
 	item->setText(6, tr("µÈ´ý"));
 /*	item->setText(7, )*/
-	queueTreeWidget->openPersistentEditor(item, 7);
-    QProgressBar *p = static_cast<QProgressBar*>(queueTreeWidget->itemWidget(item, 7));
-    p->setRange(0, taskData.fileSize);
+	//queueTreeWidget->openPersistentEditor(item, 7);
+	QProgressBar *progress = new QProgressBar(this);
+	queueTreeWidget->setItemWidget(item, 7, progress);
+//     QProgressBar *p = static_cast<QProgressBar*>(queueTreeWidget->itemWidget(item, 7));
+//     p->setRange(0, taskData.fileSize);
     //item->setData(7, Qt::UserRole, 20);
    /* task->setObject(static_cast<QObject*>(p));*/
 /*    QProgressBar *p = static_cast<QProgressBar*>(queueTreeWidget->itemWidget(item, 7));*/
@@ -74,7 +76,10 @@ void QueueWidget::updateProgressValue(qint64 done, qint64 total)
     FTPClient *ftpClient = static_cast<FTPClient*>(sender());
     Task *task = ftpClient->currentTask();
     QTreeWidgetItem *item = findItem(task->taskId());
-    item->setData(7, Qt::UserRole, done);
+	QProgressBar *progress = static_cast<QProgressBar*>(queueTreeWidget->itemWidget(item, 7));
+	progress->setRange(0, total);
+	progress->setValue(done);
+    /*item->setData(7, Qt::UserRole, done);*/
 }
 
 QTreeWidgetItem * QueueWidget::findItem(qint64 taskId)
@@ -89,40 +94,40 @@ QTreeWidgetItem * QueueWidget::findItem(qint64 taskId)
     return 0;
 }
 
-QueueDelegate::QueueDelegate(QObject *parent /*= 0*/)
-	: QStyledItemDelegate(parent)
-{
+// QueueDelegate::QueueDelegate(QObject *parent /*= 0*/)
+// 	: QStyledItemDelegate(parent)
+// {
+// 
+// }
 
-}
+// QWidget * QueueDelegate::createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) const
+// {
+// 	if (index.column() == 7) {
+// 		return new QProgressBar(parent);
+// 	}
+// 	return QStyledItemDelegate::createEditor(parent, option, index);
+// }
 
-QWidget * QueueDelegate::createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) const
-{
-	if (index.column() == 7) {
-		return new QProgressBar(parent);
-	}
-	return QStyledItemDelegate::createEditor(parent, option, index);
-}
+// void QueueDelegate::setEditorData(QWidget *editor, const QModelIndex &index) const
+// {
+//     if (index.column() == 7) {
+//         qint64 value = qint64(index.model()->data(index, Qt::UserRole).toLongLong());
+//         QProgressBar *progress = static_cast<QProgressBar*>(editor);
+//         progress->setValue(value);
+//     } else {
+//         QStyledItemDelegate::setEditorData(editor, index);
+//     }
+// }
 
-void QueueDelegate::setEditorData(QWidget *editor, const QModelIndex &index) const
-{
-    if (index.column() == 7) {
-        qint64 value = qint64(index.model()->data(index, Qt::UserRole).toLongLong());
-        QProgressBar *progress = static_cast<QProgressBar*>(editor);
-        progress->setValue(value);
-    } else {
-        QStyledItemDelegate::setEditorData(editor, index);
-    }
-}
-
-void QueueDelegate::setModelData(QWidget *editor, QAbstractItemModel *model, const QModelIndex &index) const
-{
-    if (index.column() == 7) {
-        QProgressBar *progress = static_cast<QProgressBar*>(editor);
-        model->setData(index, progress->value(), Qt::UserRole);
-    } else {
-        QStyledItemDelegate::setModelData(editor, model, index);
-    }
-}
+// void QueueDelegate::setModelData(QWidget *editor, QAbstractItemModel *model, const QModelIndex &index) const
+// {
+//     if (index.column() == 7) {
+//         QProgressBar *progress = static_cast<QProgressBar*>(editor);
+//         model->setData(index, progress->value(), Qt::UserRole);
+//     } else {
+//         QStyledItemDelegate::setModelData(editor, model, index);
+//     }
+// }
 
 TaskThread::TaskThread(QObject *parent /*= 0*/)
 	: QThread(parent)

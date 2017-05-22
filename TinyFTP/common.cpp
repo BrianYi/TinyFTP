@@ -16,7 +16,9 @@ bool delDir(const QString &dirPath)
 		return false;
 	}
 	QDir dir(dirPath);
-	if (!dir.exists()) {
+	if (!dir.exists() || 
+		dir.dirName() == QObject::tr("..") || 
+		dir.dirName() == QObject::tr(".")) {
 		return true;
 	}
 	foreach (QFileInfo fileInfo, dir.entryInfoList(QDir::AllEntries | QDir::NoDotAndDotDot)) {

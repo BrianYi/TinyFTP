@@ -12,17 +12,17 @@ class FTPClient;
 class TaskThread;
 class TinyFTP;
 class RemoteDirWidget;
-class QueueDelegate : public QStyledItemDelegate
-{
-	Q_OBJECT
-public:
-	QueueDelegate(QObject *parent = 0);
-	QWidget *createEditor(QWidget *parent,
-		const QStyleOptionViewItem &option,
-		const QModelIndex &index) const;
-    void setEditorData(QWidget *editor, const QModelIndex &index) const;
-    void setModelData(QWidget *editor, QAbstractItemModel *model, const QModelIndex &index) const;
-};
+// class QueueDelegate : public QStyledItemDelegate
+// {
+// 	Q_OBJECT
+// public:
+// 	QueueDelegate(QObject *parent = 0);
+// 	QWidget *createEditor(QWidget *parent,
+// 		const QStyleOptionViewItem &option,
+// 		const QModelIndex &index) const;
+//     void setEditorData(QWidget *editor, const QModelIndex &index) const;
+//     void setModelData(QWidget *editor, QAbstractItemModel *model, const QModelIndex &index) const;
+// };
 
 class QueueWidget : public QDockWidget
 {
@@ -38,7 +38,7 @@ public:
 private:
 	QTabWidget *tabWidget;
 	QTreeWidget *queueTreeWidget;
-	QueueDelegate *queueDelegate;
+	//QueueDelegate *queueDelegate;
 	TaskThread *taskThread;
 };
 

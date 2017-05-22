@@ -311,8 +311,8 @@ void RemoteDirWidget::listDirectoryFiles(const QString &dirName/* = ""*/)
 	currentListDirPathUrl = dirName.isEmpty() ? currentDirPathUrl() :
         QDir::fromNativeSeparators(QDir::cleanPath(currentDirPathUrl() + tr("/") + dirName));
 	currentListLocalDirPath = QDir::fromNativeSeparators(QDir::cleanPath(cacheDir + currentListDirPathUrl));
-    delDir(currentListLocalDirPath);
-	QDir().mkpath(currentListLocalDirPath);
+	delDir(currentListLocalDirPath);
+	QDir().mkdir(currentListLocalDirPath);
 	ftpClient->list(encoded(currentListDirPathUrl));
 }
 
