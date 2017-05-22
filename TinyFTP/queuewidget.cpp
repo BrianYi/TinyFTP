@@ -163,27 +163,17 @@ void TaskThread::run()
 			connect(ftpClient, SIGNAL(refreshRemoteDirWidget()), task->parent(), SLOT(refresh()));
             QueueWidget *queueWidget = static_cast<QueueWidget*>(this->getObject());
             if (queueWidget) {
-                /*QProgressBar *p = static_cast<QProgressBar*>(task->taskObject());*/
-                //bool c = connect(ftpClient, SIGNAL(dataTransferProgress(qint64,qint64)), task, SLOT(updateProgressStatus(qint64,qint64)));
-                //connect(ftpClient, SIGNAL(dataTransferProgress(qint64,qint64)), queueWidget, SLOT(updateProgressValue(qint64,qint64)));
+                connect(ftpClient, SIGNAL(dataTransferProgress(qint64,qint64)), queueWidget, SLOT(updateProgressValue(qint64,qint64)));
             }
 			//*******************************
 			// 处理Task
 			ftpClient->setCurrentTask(task);
-			//ftpClient->sendMsg(tr(">>>>>>>>>>>开始任务[%1]<<<<<<<<<<<").arg(task->taskName()));
 			ftpClient->connectToHost(taskData.urlAddress.host(), taskData.urlAddress.port());
 			ftpClient->login(taskData.urlAddress.userName(), taskData.urlAddress.password());
-			/*sleep(3);*/
 			if (task->taskType() == taskType_Download) {
-				// 					ftpClient->sendMsg(tr("开始下载 %1 到 %2").arg(taskData.downloadRemoteDirPathUrl + 
-				// 						tr("/") + taskData.fileName).arg(
-				// 						taskData.downloadLocalDirPath + tr("/") + taskData.fileName));
 				ftpClient->download(taskData.downloadRemoteDirPathUrl, taskData.downloadLocalDirPath,
 					taskData.fileName, taskData.isDir);
 			} else if (task->taskType() == taskType_Upload) {
-				// 					ftpClient->sendMsg(tr("开始上传 %1 到 %2").arg(taskData.uploadRemoteDirPathUrl + 
-				// 						tr("/") + taskData.fileName).arg(
-				// 						taskData.uploadLocalDirPath + tr("/") + taskData.fileName));
 				ftpClient->upload(taskData.uploadRemoteDirPathUrl, taskData.uploadLocalDirPath + 
 					tr("/") + taskData.fileName);
 			}

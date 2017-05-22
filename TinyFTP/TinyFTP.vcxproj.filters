@@ -125,15 +125,6 @@
     <ClCompile Include="GeneratedFiles\Release\moc_ftpclient.cpp">
       <Filter>Generated Files\Release</Filter>
     </ClCompile>
-    <ClCompile Include="cell.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="GeneratedFiles\Debug\moc_qftp.cpp">
-      <Filter>Generated Files\Debug</Filter>
-    </ClCompile>
-    <ClCompile Include="GeneratedFiles\Release\moc_qftp.cpp">
-      <Filter>Generated Files\Release</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="dirtreemodel.h">
@@ -167,21 +158,6 @@
       <Filter>Header Files</Filter>
     </CustomBuild>
     <CustomBuild Include="common.h">
-      <Filter>Header Files</Filter>
-    </CustomBuild>
-    <CustomBuild Include="cell.h">
-      <Filter>Header Files</Filter>
-    </CustomBuild>
-    <CustomBuild Include="qftp.cpp">
-      <Filter>Source Files</Filter>
-    </CustomBuild>
-    <CustomBuild Include="GeneratedFiles\Debug\qftp.moc">
-      <Filter>Generated Files\Debug</Filter>
-    </CustomBuild>
-    <CustomBuild Include="GeneratedFiles\Release\qftp.moc">
-      <Filter>Generated Files\Release</Filter>
-    </CustomBuild>
-    <CustomBuild Include="qftp.h">
       <Filter>Header Files</Filter>
     </CustomBuild>
   </ItemGroup>
