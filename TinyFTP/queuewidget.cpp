@@ -56,15 +56,8 @@ void QueueWidget::addTask(Task *task)
 		item->setText(5, taskData.uploadRemoteDirPathUrl);
 	}
 	item->setText(6, tr("µÈ´ý"));
-/*	item->setText(7, )*/
-	//queueTreeWidget->openPersistentEditor(item, 7);
 	QProgressBar *progress = new QProgressBar(this);
 	queueTreeWidget->setItemWidget(item, 7, progress);
-//     QProgressBar *p = static_cast<QProgressBar*>(queueTreeWidget->itemWidget(item, 7));
-//     p->setRange(0, taskData.fileSize);
-    //item->setData(7, Qt::UserRole, 20);
-   /* task->setObject(static_cast<QObject*>(p));*/
-/*    QProgressBar *p = static_cast<QProgressBar*>(queueTreeWidget->itemWidget(item, 7));*/
 	taskThread->addTask(task);
 	if (!taskThread->isRunning()) {
 		taskThread->start();
